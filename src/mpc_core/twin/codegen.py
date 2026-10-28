@@ -1,4 +1,4 @@
-"""Emit C for the IBH step from the CasADi definition (one shared formula).
+"""Emit C for the heater step from the CasADi definition (one shared formula).
 
 The generated files can be checked into an embedded runtime tree so a target
 build does not need Python or CasADi. Regenerating and diffing is a dev step.
@@ -12,7 +12,7 @@ from mpc_core.twin.ibh import ibh_step_function
 
 # Header kept stable so a C/C++ runtime can include it without CasADi.
 _ABI_HEADER = """\
-/* Generated ABI for the induction billet heater heat-balance step.
+/* Generated ABI for the induction heater heat-balance step.
  * Do not hand-edit the formula body: regenerate via
  *   python -c "from mpc_core.twin.codegen import write_ibh_step_c; write_ibh_step_c(Path('...'))"
  * Parameters are always passed in; nothing physical is hardcoded.

@@ -40,4 +40,4 @@ CasADi remains an external PyPI dependency (LGPL-3.0) and is not vendored.
 - **Project:** CasADi
 - **URL:** https://web.casadi.org/
 - **Licence:** GNU LGPL-3.0
-- **Use:** IBH twin step in `twin/ibh.py` (pip dependency `casadi==3.8.2`).
+- **Use:** Heater twin step in `twin/ibh.py` (pip dependency `casadi==3.8.2`).

@@ -1,4 +1,4 @@
-# How the MPC and IBH twin work
+# How the MPC and heater twin work
 
 British spelling. Numbers below are taken from the source or from illustrative
 unit tests; nothing here invents a plant value.
@@ -10,9 +10,8 @@ There are two related pieces:
 1. **Offset-free MPC** (`mpc.py`) on an **identified discrete linear model**.
    The quadratic programme is solved with **SciPy** (`scipy.optimize.minimize`,
    method `L-BFGS-B`).
-2. **Induction billet heater (IBH) twin** (`twin/ibh.py`), authored with
-   **CasADi**. This is the physics heat-balance step used as a simulation
-   plant. It is not the QP solver.
+2. **Heater twin** (`twin/ibh.py`), authored with **CasADi**. This is the
+   physics heat-balance step used as a simulation plant. It is not the QP solver.
 
 ## Plant model (for the MPC)
 
@@ -118,7 +117,7 @@ Illustrative values used in tests and the demo:
 There is no move suppression weight and no separate observer gain: the
 disturbance update is a full innovation correction.
 
-## CasADi plant twin (IBH)
+## CasADi plant twin (heater)
 
 Separate from the QP. The heat balance is
 
@@ -140,8 +139,8 @@ Illustrative fixture used in tests (not plant defaults):
 `T_amb_c = 25.0`. With `T = 25`, `P = 1000`, `dt = 1` the step gives
 `T_next = 25.5`.
 
-`codegen.py` can emit a matching C function `ibh_step` and header guard
-`IBH_STEP_H` under `include/ibh/` for embedded runtimes. CasADi itself is not
+`codegen.py` can emit a matching C function `ibh_step` and header
+`ibh_step.h` under `include/ibh/` for embedded runtimes. CasADi itself is not
 vendored; install `casadi==3.8.2` from PyPI (LGPL-3.0).
 
 ## How to run
@@ -155,5 +154,5 @@ streamlit run app.py
 ```
 
 The demo drives the illustrative ARX with the offset-free solver for a few
-steps, then runs one CasADi IBH twin step with the fixture parameters above.
+steps, then runs one CasADi heater twin step with the fixture parameters above.
 Simulations write comparison plots to `results/`.

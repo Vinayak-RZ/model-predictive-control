@@ -22,7 +22,7 @@ class DemoConfig:
 
 
 def default_demo_config() -> DemoConfig:
-    """IBH fixture scaled for a slow billet-like response; ARX fitted offline."""
+    """Heater fixture scaled for a slow thermal response; ARX fitted offline."""
     ibh = IBHParams(
         m_kg=800.0,
         c_p_j_per_kg_k=480.0,
@@ -30,7 +30,7 @@ def default_demo_config() -> DemoConfig:
         U_w_per_k=45.0,
         T_amb_c=25.0,
     )
-    # Fitted from a 120 s power step on the IBH twin (least squares, illustrative).
+    # Fitted from a 120 s power step on the heater twin (least squares, illustrative).
     model = IdentifiedLinearModel(
         fit_id="fit-ibh-illustrative",
         a=0.978,

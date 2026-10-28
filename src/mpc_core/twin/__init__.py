@@ -1,4 +1,4 @@
-"""CasADi induction billet heater (IBH) heat-balance twin."""
+"""CasADi heat-balance heater twin (CasADi step in twin/ibh.py)."""
 
 from mpc_core.twin.codegen import generate_ibh_step_c, write_ibh_step_c
 from mpc_core.twin.ibh import (

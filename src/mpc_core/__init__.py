@@ -1,4 +1,4 @@
-"""Offset-free MPC and CasADi IBH heat-balance twin for coursework simulations.
+"""Offset-free MPC and CasADi heat-balance heater twin for coursework simulations.
 
 MPC quadratic programme: SciPy L-BFGS-B (see mpc.py).
 Plant twin authoring: CasADi (see twin/ibh.py).

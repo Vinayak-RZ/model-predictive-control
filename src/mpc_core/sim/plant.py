@@ -1,4 +1,4 @@
-"""IBH truth model with optional time-varying disturbances."""
+"""Heater truth model with optional time-varying disturbances."""
 
 from __future__ import annotations
 

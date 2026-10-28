@@ -1,4 +1,4 @@
-"""Run MPC or PID against the IBH plant for one scenario."""
+"""Run MPC or PID against the heater plant for one scenario."""
 
 from __future__ import annotations
 

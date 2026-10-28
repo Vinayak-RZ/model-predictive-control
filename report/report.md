@@ -1,12 +1,12 @@
-# Model predictive control for an induction billet heater
+# Model predictive control for induction heating
 
 **Author:** Vinayak · Industrial Control coursework · IIT Roorkee (Electrical Engineering)
 
 ## Abstract
 
 This report compares **offset-free model predictive control (MPC)** against a
-**tuned discrete PID** baseline on a CasADi heat-balance twin of an induction
-billet heater (IBH). Three scenarios—setpoint tracking, disturbance rejection,
+**tuned discrete PID** baseline on a CasADi heat-balance model of an induction
+heater. Three scenarios—setpoint tracking, disturbance rejection,
 and constrained power—show where prediction and explicit constraints help, and
 where a simple PID still competes on energy or raw error if limits are ignored.
 
@@ -20,7 +20,7 @@ The project combines:
 
 - **MPC:** SISO offset-free QP solved with SciPy L-BFGS-B on an identified
   linear model `y[k+1] = a y[k] + b u[k] + d_hat`.
-- **Plant:** Nonlinear IBH twin `m c_p dT/dt = η P − U (T − T_amb)` stepped in
+- **Plant:** Nonlinear heater twin `m c_p dT/dt = η P − U (T − T_amb)` stepped in
   CasADi (`twin/ibh.py`).
 
 Additional coursework layers:
@@ -36,7 +36,7 @@ Third-party references and licences are listed in `CREDITS.md`.
 
 ---
 
-## 2. Why MPC for a billet heater?
+## 2. Why MPC for this heater?
 
 Induction heating is slow, coupled, and power-limited. A PID loop reacts only
 after temperature drifts. MPC uses a model to **anticipate** future temperature
@@ -136,7 +136,7 @@ deployment would add move penalties, MIMO coupling, and model validation gates
 
 ## 5. Conclusion
 
-On the IBH twin, offset-free MPC improves **setpoint tracking** and
+On this heater model, offset-free MPC improves **setpoint tracking** and
 **disturbance rejection** metrics while respecting **power limits** without
 constraint violations. PID remains valuable as a baseline: lower implementation
 cost and competitive energy use when limits are loose, but it falls behind when

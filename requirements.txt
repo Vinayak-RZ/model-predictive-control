@@ -1,8 +1,8 @@
-# Runtime dependencies for the standalone MPC + IBH twin extract.
+# Runtime dependencies for MPC + heater twin coursework.
 # Install into a virtual environment; do not vendor these packages into this tree.
 numpy>=2.0
 scipy>=1.13
-# CasADi authors the IBH heat-balance twin (twin/ibh.py). The MPC quadratic
+# CasADi authors the heat-balance heater twin (twin/ibh.py). The MPC quadratic
 # programme itself uses SciPy (mpc.py), not CasADi.
 # CasADi 3.8.2 is licensed under LGPL-3.0. Install it separately from PyPI;
 # do not copy CasADi source into this repository.

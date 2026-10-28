@@ -1,12 +1,12 @@
-"""CasADi induction billet heater (IBH) heat-balance twin (W3.7).
+"""CasADi heat-balance twin for an induction heater (W3.7).
 
-Structure follows the research heat-balance form (lumped billet temperature):
+Structure follows the research heat-balance form (lumped workpiece temperature):
 
     m * c_p * dT/dt = eta * P_coil - U * (T - T_amb)
 
 No physical number is baked in. Every coefficient is a named parameter that
 must be status=set before a step runs. Plant geometry (coil slot count, coil
-frequency, billet diameter) is not invented here; it stays for pack binding.
+frequency, workpiece diameter) is not invented here; it stays for pack binding.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ IBH_PARAM_NAMES: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class IBHParams:
-    """Physical coefficients for one IBH heat-balance step. All must be set."""
+    """Physical coefficients for one heater heat-balance step. All must be set."""
 
     m_kg: float
     c_p_j_per_kg_k: float

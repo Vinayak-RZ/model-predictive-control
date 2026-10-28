@@ -1,4 +1,4 @@
-"""Interactive MPC vs PID comparison for the IBH coursework demo."""
+"""Interactive MPC vs PID comparison for the heater coursework demo."""
 
 from __future__ import annotations
 
@@ -11,19 +11,20 @@ from mpc_core.sim.simulate import run_closed_loop
 from mpc_core.thresholds import SetpointLimits
 
 st.set_page_config(
-    page_title="IBH MPC vs PID",
+    page_title="Heater MPC vs PID",
     page_icon="🔥",
     layout="wide",
 )
 
 cfg = default_demo_config()
 
-st.title("Induction billet heater: MPC vs PID")
+st.title("Heater control: MPC vs PID")
 st.markdown(
     """
 This demo runs **offset-free model predictive control** (SciPy L-BFGS-B on an
-identified linear model) against a **tuned PID** baseline on the **CasADi IBH
-heat-balance twin**. Numbers are illustrative coursework values, not plant data.
+identified linear model) against a **tuned PID** baseline on a **CasADi
+heat-balance heater model**. Numbers are illustrative coursework values, not
+plant data.
 """
 )
 
@@ -74,7 +75,7 @@ with col_right:
             float(u_high),
             float(du_max),
         )
-        with st.spinner("Simulating IBH plant…"):
+        with st.spinner("Simulating heater plant…"):
             mpc = run_closed_loop(
                 scenario,
                 "mpc",

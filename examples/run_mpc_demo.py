@@ -55,7 +55,7 @@ def main() -> None:
         u = u_next
 
     print()
-    print("CasADi IBH twin one-step (illustrative fixture params, not plant data)")
+    print("CasADi heater twin one-step (illustrative fixture params, not plant data)")
     params = require_params(
         {
             "m_kg": 2.0,

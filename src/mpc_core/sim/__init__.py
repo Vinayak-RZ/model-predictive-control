@@ -1,4 +1,4 @@
-"""Closed-loop simulations: IBH plant, PID baseline, MPC comparison."""
+"""Closed-loop simulations: heater plant, PID baseline, MPC comparison."""
 
 from mpc_core.sim.metrics import SimulationMetrics, compute_metrics
 from mpc_core.sim.scenarios import SCENARIOS, ScenarioConfig

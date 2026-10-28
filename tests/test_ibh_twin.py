@@ -1,4 +1,4 @@
-"""CasADi IBH twin step tests. Fixture values are test-only, not plant defaults."""
+"""CasADi heater twin step tests. Fixture values are test-only, not plant defaults."""
 
 from __future__ import annotations
 
