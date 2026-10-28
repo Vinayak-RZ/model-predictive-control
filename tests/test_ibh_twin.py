@@ -63,6 +63,9 @@ def test_write_ibh_step_c_round_trip(tmp_path: Path) -> None:
     write_ibh_step_c(tmp_path / "generated")
     assert (tmp_path / "generated" / "ibh_step.c").read_text() == generate_ibh_step_c()
     assert (tmp_path / "include" / "ibh" / "ibh_step.h").is_file()
+    header = (tmp_path / "include" / "ibh" / "ibh_step.h").read_text()
+    assert "IBH_STEP_H" in header
+    assert "ibh_step(" in generate_ibh_step_c()
     # No invented plant constants in the C body (only formula + p[] reads).
     checked = generate_ibh_step_c()
     assert "480" not in checked
