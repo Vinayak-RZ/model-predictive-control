@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from mpc_from_stamped.twin.codegen import generate_ibh_step_c, write_ibh_step_c
-from mpc_from_stamped.twin.ibh import (
+from mpc_core.twin.codegen import generate_ibh_step_c, write_ibh_step_c
+from mpc_core.twin.ibh import (
     IBH_PARAM_NAMES,
     OpenTwinParameter,
     ibh_step_function,
@@ -62,7 +62,7 @@ def test_rejects_non_positive_dt() -> None:
 def test_write_ibh_step_c_round_trip(tmp_path: Path) -> None:
     write_ibh_step_c(tmp_path / "generated")
     assert (tmp_path / "generated" / "ibh_step.c").read_text() == generate_ibh_step_c()
-    assert (tmp_path / "include" / "stamped" / "ibh_step.h").is_file()
+    assert (tmp_path / "include" / "ibh" / "ibh_step.h").is_file()
     # No invented plant constants in the C body (only formula + p[] reads).
     checked = generate_ibh_step_c()
     assert "480" not in checked

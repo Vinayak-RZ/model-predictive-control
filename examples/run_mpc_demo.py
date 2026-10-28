@@ -7,13 +7,13 @@ Numbers below are the same illustrative ARX used in the unit tests
 
 from __future__ import annotations
 
-from mpc_from_stamped import (
+from mpc_core import (
     IdentifiedLinearModel,
     MpcState,
     SetpointLimits,
     solve,
 )
-from mpc_from_stamped.twin.ibh import require_params, step_ibh
+from mpc_core.twin.ibh import require_params, step_ibh
 
 
 def main() -> None:

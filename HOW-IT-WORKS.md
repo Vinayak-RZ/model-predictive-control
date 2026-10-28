@@ -1,10 +1,7 @@
-# How the Stamped MPC extract works
+# How the MPC and IBH twin work
 
-British spelling. Numbers below are taken from the copied source or from the
-illustrative unit tests; nothing here invents a plant value.
-
-Source commit: `Stamped-Energy/stamped` `integration/build-2026-10-28`
-(`0f77288562f4274c39005e922e3c41f8ca0ad5d1`).
+British spelling. Numbers below are taken from the source or from illustrative
+unit tests; nothing here invents a plant value.
 
 ## Big picture
 
@@ -12,13 +9,10 @@ There are two related pieces:
 
 1. **Offset-free MPC** (`mpc.py`) on an **identified discrete linear model**.
    The quadratic programme is solved with **SciPy** (`scipy.optimize.minimize`,
-   method `L-BFGS-B`). This is the W5.1 shadow controller in the product.
+   method `L-BFGS-B`).
 2. **Induction billet heater (IBH) twin** (`twin/ibh.py`), authored with
-   **CasADi**. This is the physics heat-balance step used as a plant twin. It
-   is not the QP solver.
-
-The product comment in the control package states that MPC uses SciPy only,
-and that the CasADi twin path is reached through the twin interface.
+   **CasADi**. This is the physics heat-balance step used as a simulation
+   plant. It is not the QP solver.
 
 ## Plant model (for the MPC)
 
@@ -60,12 +54,11 @@ for `horizon_steps` steps. The cost is the sum of squared tracking errors:
 J(u) = sum_i (y_i - y_ref)^2
 ```
 
-There is **no move-weight term** in this W5.1 code. The module docstring says
-so explicitly so that nothing is invented.
+There is **no move-weight term** in this coursework controller. The module
+docstring states that explicitly so that nothing is invented.
 
 Decision variables: a **single** held input for the whole horizon (one degree
-of freedom for the SISO shadow). Multi-move free sequences are noted as future
-work once a move-weight is set.
+of freedom for this SISO implementation).
 
 ## Constraints
 
@@ -96,35 +89,31 @@ Illustrative test window: `low = 900`, `high = 1100`, `max_step = 50`, unit
   `d_hat`, the predicted `y` sequence, active constraints, and the updated
   `MpcState`.
 
-Horizon and solver time limit are required inputs. Open values in the product
-runner cause an abstain; this extract takes them as plain function arguments.
+Horizon and solver time limit are required function arguments.
 
 ## Prediction and control horizons
 
-In this SISO shadow implementation the prediction horizon is `horizon_steps`,
-and the control move is a single held value for that whole horizon (control
-horizon effectively 1 block of length `horizon_steps`).
+The prediction horizon is `horizon_steps`. The control move is a single held
+value for that whole horizon (control horizon effectively one block of length
+`horizon_steps`).
 
 Illustrative values used in tests and the demo:
 
 - `horizon_steps = 20` in the core solve test and demo loop
-- `horizon_steps` set to `8` in the product module fixture (`setv(8.0)`)
 - `solver_time_limit_s = 2.0` in those same places
 
 `horizon_steps` must be an integer at least 1.
 
-## Tuning (what the code actually exposes)
+## Tuning (what the code exposes)
 
-There is no separate tuner in this extract. The knobs that exist are:
-
-| Knob | Where | Notes from the code |
+| Knob | Where | Notes |
 | --- | --- | --- |
 | `a`, `b`, `dt_s` | `IdentifiedLinearModel` | From identification; refused if `b == 0` |
-| `horizon_steps` | `solve(...)` | Positive integer; open → abstain in product |
+| `horizon_steps` | `solve(...)` | Positive integer |
 | `solver_time_limit_s` | `solve(...)` | Soft deadline via `MpcTimedOut` |
-| `low`, `high`, `max_step` | `SetpointLimits` | From the line pack in product; passed in here |
+| `low`, `high`, `max_step` | `SetpointLimits` | Passed in by caller |
 | `y_ref` | `solve(...)` | Controlled-variable reference |
-| Model card | `model_card.py` | Product runner refuses MPC without a valid card (held-out residual under `max_held_out_rms`, `b != 0`) |
+| Model card | `model_card.py` | Optional gate: held-out residual under `max_held_out_rms`, `b != 0` |
 
 There is no move suppression weight and no separate observer gain: the
 disturbance update is a full innovation correction.
@@ -151,20 +140,20 @@ Illustrative fixture used in tests (not plant defaults):
 `T_amb_c = 25.0`. With `T = 25`, `P = 1000`, `dt = 1` the step gives
 `T_next = 25.5`.
 
-`codegen.py` can emit a matching C function `stamped_ibh_step` for a box
-runtime. CasADi itself is not vendored; install `casadi==3.8.2` from PyPI
-(LGPL-3.0).
+`codegen.py` can emit a matching C function `ibh_step` and header guard
+`IBH_STEP_H` under `include/ibh/` for embedded runtimes. CasADi itself is not
+vendored; install `casadi==3.8.2` from PyPI (LGPL-3.0).
 
-## How to run this extract
+## How to run
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -r requirements.txt && pip install -e .
 pytest
 python examples/run_mpc_demo.py
+python examples/run_simulations.py
+streamlit run app.py
 ```
 
 The demo drives the illustrative ARX with the offset-free solver for a few
 steps, then runs one CasADi IBH twin step with the fixture parameters above.
-Nothing writes to a plant.
+Simulations write comparison plots to `results/`.

@@ -1,7 +1,7 @@
 """CasADi induction billet heater (IBH) heat-balance twin."""
 
-from mpc_from_stamped.twin.codegen import generate_ibh_step_c, write_ibh_step_c
-from mpc_from_stamped.twin.ibh import (
+from mpc_core.twin.codegen import generate_ibh_step_c, write_ibh_step_c
+from mpc_core.twin.ibh import (
     IBH_PARAM_NAMES,
     IBHParams,
     OpenTwinParameter,

@@ -7,4 +7,6 @@ scipy>=1.13
 # CasADi 3.8.2 is licensed under LGPL-3.0. Install it separately from PyPI;
 # do not copy CasADi source into this repository.
 casadi==3.8.2
+matplotlib>=3.8
+streamlit>=1.28
 pytest>=8.0

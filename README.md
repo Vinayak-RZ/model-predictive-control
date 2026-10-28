@@ -1,52 +1,59 @@
-# MPC from Stamped (course extract)
+# Model predictive control — induction billet heater
 
-Standalone copy of Stamped's offset-free model predictive control (MPC) and
-the CasADi induction billet heater (IBH) heat-balance twin, prepared for an
-Industrial Control coursework repository.
+Course project for **Industrial Control**, IIT Roorkee (Electrical Engineering,
+Vinayak). This repository implements **offset-free model predictive control**
+(SciPy L-BFGS-B) and a **CasADi heat-balance twin** of an induction billet
+heater (IBH), with closed-loop simulations, a Streamlit teaching UI, and a
+short written report.
 
-**Source:** `Stamped-Energy/stamped` branch `integration/build-2026-10-28` at
-commit `0f77288562f4274c39005e922e3c41f8ca0ad5d1`.
+## Highlights
 
-## What is in here
+- **Three scenarios:** setpoint tracking, disturbance rejection (heat-loss step),
+  tight power/rate limits — MPC vs tuned PID with IAE/ISE, overshoot, settling
+  time, violations, and energy.
+- **`app.py`:** side-by-side runs with plain-language MPC explanations.
+- **`report/report.md`:** course write-up with figures from `results/`.
 
-| Path | Role |
-| --- | --- |
-| `src/mpc_from_stamped/mpc.py` | Offset-free MPC solver (SciPy L-BFGS-B) |
-| `src/mpc_from_stamped/identified.py` | Identified discrete linear plant model |
-| `src/mpc_from_stamped/thresholds.py` | Setpoint window and max-step limits |
-| `src/mpc_from_stamped/model_card.py` | Model-card gate used before MPC may run |
-| `src/mpc_from_stamped/twin/ibh.py` | CasADi IBH heat-balance twin |
-| `src/mpc_from_stamped/twin/codegen.py` | Emit matching C for the twin step |
-| `examples/run_mpc_demo.py` | Illustrative closed-loop demo |
-| `HOW-IT-WORKS.md` | Plant model, cost, constraints, solver, horizons, tuning |
-| `SANITISED.md` | What was removed or replaced for public use |
-
-## Important accuracy note
-
-The **MPC quadratic programme uses SciPy**, not CasADi. CasADi is used to
-**author the IBH plant twin** (heat-balance step). Both pieces come from the
-same Stamped process cell and are included here.
-
-CasADi 3.8.2 is LGPL-licensed. This tree does **not** vendor CasADi; install
-it from PyPI (see `requirements.txt`).
-
-## Setup
+## Quick start
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-# or: pip install -r requirements.txt && pip install -e .
-```
-
-## Run
-
-```bash
+python3 -m venv .venv && source .venv/bin/activate   # when venv is available
+pip install -r requirements.txt
+pip install -e .
 pytest
-python examples/run_mpc_demo.py
+python examples/run_simulations.py    # writes PNGs to results/
+streamlit run app.py
 ```
 
-## Licence note
+If `venv` is unavailable: `pip install --user -r requirements.txt` and
+`python3 -m streamlit run app.py` (add `~/.local/bin` to `PATH`).
 
-Stamped product code in this extract was copied with the owner's permission
-for a public course repository. CasADi remains a separate LGPL dependency.
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| `src/mpc_core/mpc.py` | Offset-free MPC solver |
+| `src/mpc_core/twin/ibh.py` | CasADi IBH twin step |
+| `src/mpc_core/sim/` | Closed-loop simulation, metrics, plotting |
+| `examples/run_mpc_demo.py` | Minimal MPC + one IBH step |
+| `examples/run_simulations.py` | Batch MPC vs PID → `results/*.png` |
+| `app.py` | Streamlit interactive demo |
+| `report/report.md` | Course report |
+| `results/` | Simulation plots and `metrics_summary.json` |
+| `CREDITS.md` | Third-party licences and references |
+| `HOW-IT-WORKS.md` | Plant model, cost, constraints, solver |
+
+## Screenshot (Streamlit UI)
+
+![Streamlit UI](docs/app_screenshot.png)
+
+## Solver note
+
+The MPC quadratic program uses **SciPy**, not CasADi. CasADi authors the **plant
+twin** only. CasADi 3.8.2 is **LGPL-3.0** and is installed from PyPI — not
+vendored in this tree.
+
+## Licence
+
+See `CREDITS.md` for dependency licences. Course simulation code is provided
+for educational use.

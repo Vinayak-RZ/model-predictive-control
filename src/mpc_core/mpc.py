@@ -18,8 +18,8 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy.optimize import minimize
 
-from mpc_from_stamped.identified import IdentifiedLinearModel
-from mpc_from_stamped.thresholds import SetpointLimits
+from mpc_core.identified import IdentifiedLinearModel
+from mpc_core.thresholds import SetpointLimits
 
 
 class MpcTimedOut(Exception):

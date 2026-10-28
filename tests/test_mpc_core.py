@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from mpc_from_stamped import (
+from mpc_core import (
     IdentifiedLinearModel,
     MpcState,
     SetpointLimits,
