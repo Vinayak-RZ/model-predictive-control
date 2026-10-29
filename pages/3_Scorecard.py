@@ -8,15 +8,22 @@ import streamlit as st
 from mpc_core.sim.config import default_demo_config
 from mpc_core.sim.metrics import SimulationMetrics
 from mpc_core.sim.playground import run_triple
-from mpc_core.sim.plotly_charts import metrics_bar_chart
+from mpc_core.sim.plotly_charts import grouped_metrics_figure, metrics_bar_chart
 from mpc_core.sim.scenarios import SCENARIOS, ScenarioConfig
 from mpc_core.sim.simulate import RunOptions
+from mpc_core.sim.ui import inject_styles, page_header, sidebar_brand, takeaway
 
-st.set_page_config(page_title="Scorecard", layout="wide")
+st.set_page_config(page_title="Scorecard · MPC Heater Lab", layout="wide")
+inject_styles()
+sidebar_brand()
 
-st.markdown(
-    "**This screen** runs the same scenarios for MPC, hand-tuned PID, and optimized PID, "
-    "then tabulates IAE, overshoot, settling time, energy, and constraint violations."
+page_header(
+    eyebrow="Proof",
+    title="Scorecard",
+    look_for=(
+        "Same plant, noise, and limits for MPC, hand-tuned PID, and optimized PID. "
+        "Lower IAE and violations are better; settling only counts once the band is reached."
+    ),
 )
 
 
@@ -62,6 +69,59 @@ def scorecard_rows():
 
 
 df = scorecard_rows()
+
+# Lead with power-limits story from existing data
+power_label = "Power Constraints"
+if power_label not in df["Scenario"].unique():
+    # Fallback: match by substring
+    power_rows = df[df["Scenario"].str.contains("Power", case=False)]
+else:
+    power_rows = df[df["Scenario"] == power_label]
+
+if not power_rows.empty:
+    viol = {
+        row["Controller"]: int(row["Violations"])
+        for _, row in power_rows.iterrows()
+    }
+    mpc_v = viol.get("MPC", 0)
+    pid_v = viol.get("PID", 0)
+    opt_v = viol.get("Optimized PID", 0)
+    takeaway(
+        label="Demo takeaway · power limits",
+        body=(
+            f"On the power-limits scenario, plain PID records **{pid_v}** constraint "
+            f"violation steps while MPC stays at **{mpc_v}** and optimized PID at **{opt_v}**. "
+            "MPC plans ahead within slew and power bounds; the hand-tuned PID hits the rate limit."
+        ),
+    )
+
+scenario_pick = st.selectbox("Scenario", df["Scenario"].unique())
+subset = df[df["Scenario"] == scenario_pick].copy()
+controllers = subset["Controller"].tolist()
+
+fig = grouped_metrics_figure(
+    controllers,
+    {
+        "IAE": subset["IAE"].fillna(0).tolist(),
+        "Settling [s]": subset["Settling [s]"].fillna(0).tolist(),
+        "Violations": subset["Violations"].fillna(0).tolist(),
+    },
+    title=f"Controller comparison — {scenario_pick}",
+)
+st.plotly_chart(fig, use_container_width=True)
+
+detail_cols = st.columns(3)
+for col, metric in zip(detail_cols, ("IAE", "Settling [s]", "Violations")):
+    with col:
+        fig_m = metrics_bar_chart(
+            subset["Controller"].tolist(),
+            subset[metric].fillna(0).tolist(),
+            title=metric,
+            y_title=metric,
+        )
+        st.plotly_chart(fig_m, use_container_width=True)
+
+st.markdown("##### Full metrics table")
 st.dataframe(
     df.style.format(
         {
@@ -77,17 +137,7 @@ st.dataframe(
     hide_index=True,
 )
 
-scenario_pick = st.selectbox("Bar charts for scenario", df["Scenario"].unique())
-subset = df[df["Scenario"] == scenario_pick]
-for metric in ("IAE", "Settling [s]", "Violations"):
-    fig = metrics_bar_chart(
-        subset["Controller"].tolist(),
-        subset[metric].fillna(0).tolist(),
-        title=f"{metric} — {scenario_pick}",
-    )
-    st.plotly_chart(fig, use_container_width=True)
-
 st.caption(
-    "Lower IAE and violations are better; settling time only applies once the band is reached. "
-    "Model mismatch shrinks MPC's margin — compare that row honestly."
+    "Model mismatch shrinks MPC's margin; compare that row honestly. "
+    "Optimized PID gains are retuned per scenario on the same plant and noise seed."
 )
