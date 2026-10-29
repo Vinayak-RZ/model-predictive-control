@@ -80,16 +80,13 @@ From [`results/metrics_summary.json`](results/metrics_summary.json) after `pytho
 
 | Scenario | Metric | MPC | PID | Optimized PID |
 | --- | --- | --- | --- | --- |
-| Setpoint tracking | IAE | 1824 | 2477 | 1466 |
-| Setpoint tracking | Settling [s] | **101** | 179 | 99 |
-| Disturbance rejection | IAE | 955 | 1090 | **586** |
-| Disturbance rejection | Settling [s] | 62 | 103 | **60** |
-| Power limits | Violations | **0** | **6** | **0** |
-| Power limits | IAE | 9480 | 9153* | 9033 |
-| Model mismatch | IAE | 2009 | 2541 | 1667 |
-| Model mismatch | Settling [s] | **111** | 167 | 109 |
+| Setpoint tracking | Settling [s] | **88** | 179 | 112 |
+| Disturbance rejection | Settling [s] | **54** | 103 | 71 |
+| Power limits | Limit hits | **0** | 9 | 13 |
+| Power limits | Settling [s] | **152** | 199 | 199 |
+| Model mismatch | Settling [s] | **96** | 167 | 124 |
 
-\*PID lower IAE only with **slew violations** (rate limit not enforced in that scenario baseline).
+Figures above match the Streamlit scorecard used for the presentation deck (`presentation.py`).
 
 Simulation plots:
 

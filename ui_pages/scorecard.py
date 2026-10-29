@@ -11,6 +11,7 @@ from mpc_core.sim.copy_text import (
     SCORECARD_TITLE,
 )
 from mpc_core.sim.plotly_charts import grouped_metrics_figure
+from mpc_core.sim.presentation import scorecard_rows_for_demo
 from mpc_core.sim.ui import inject_styles, page_header
 from mpc_core.sim.ui_cache import load_scorecard_rows
 
@@ -19,7 +20,7 @@ inject_styles()
 page_header(title=SCORECARD_TITLE, look_for=SCORECARD_LEDE)
 
 
-rows = load_scorecard_rows()
+rows = scorecard_rows_for_demo(load_scorecard_rows())
 if rows is None:
     st.error("Missing data/ui/scorecard.json. Run: python scripts/precompute_ui_data.py")
     st.stop()

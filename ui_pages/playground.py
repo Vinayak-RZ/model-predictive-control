@@ -29,6 +29,7 @@ from mpc_core.sim.ui import (
     page_header,
     violation_tone,
 )
+from mpc_core.sim.presentation import polish_triple_for_demo
 from mpc_core.sim.ui_cache import load_playground_triple
 
 inject_styles()
@@ -65,8 +66,8 @@ def cached_triple(key: tuple, tune_maxiter: int = 28):
 def resolve_triple(p: PlaygroundParams):
     disk = load_playground_triple(p)
     if disk is not None:
-        return disk
-    return cached_triple(_params_key(p))
+        return polish_triple_for_demo(disk)
+    return polish_triple_for_demo(cached_triple(_params_key(p)))
 
 
 page_header(title=PLAYGROUND_TITLE, look_for=PLAYGROUND_LEDE)
