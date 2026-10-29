@@ -1,12 +1,10 @@
 # Power limits and rate constraints
 
-Tight power cap (150 kW) and 8 kW/s move limit while requesting 165 °C. MPC anticipates the ceiling; PID often saturates and overshoots when limits bind.
+MPC vs PID vs optimized PID (Kp=0.0818, Ki=0, Kd=0.0213)
 
-| Metric | MPC | PID |
-| --- | --- | --- |
-| IAE | 9.48e+03 | 9.15e+03 |
-| ISE | 5.34e+05 | 5.02e+05 |
-| Overshoot [%] | 0 | 0 |
-| Settling time [s] | 199 | 199 |
-| Constraint violation steps | 0 | 6 |
-| Energy [kWh] | 7.75 | 7.99 |
+| Metric | MPC | PID | Opt. PID |
+| --- | --- | --- | --- |
+| IAE | 9.48e+03 | 9.15e+03 | 9.03e+03 |
+| Violations | 0 | 6 | 0 |
+| Settling [s] | 199 | 199 | 199 |
+
