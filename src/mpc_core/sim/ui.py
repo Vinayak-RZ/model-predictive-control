@@ -6,38 +6,33 @@ from dataclasses import dataclass
 
 import streamlit as st
 
-# colors.* from DESIGN.md — keep hex identical to Plotly and config.toml
-CANVAS = "#FAFAF9"
-SURFACE = "#FFFFFF"
-SURFACE_SUBTLE = "#F5F5F4"
-SURFACE_SUNKEN = "#EFEFED"
-BORDER = "#E4E4E2"
-BORDER_STRONG = "#D4D4D1"
-TEXT_PRIMARY = "#202020"
-TEXT_SECONDARY = "#5F5F5C"
-TEXT_MUTED = "#8A8A86"
-TEXT_INVERSE = "#FFFFFF"
-COBALT = "#2F6FEB"
-COBALT_50 = "#EEF3FE"
-COBALT_100 = "#DCE6FD"
-COBALT_700 = "#1D47A3"
-COBALT_HOVER = "#2459C9"
-COPPER = "#E07A3F"
-PID = "#71717A"
-OPT_PID = "#0D9488"
-SUCCESS = "#2F9E6A"
-WARNING = "#E0A526"
-CRITICAL = "#D0312D"
-
-MPC_COLOR = COBALT
-PID_COLOR = PID
-OPT_PID_COLOR = OPT_PID
-
-CONTROLLER_COLORS = {
-    "MPC": MPC_COLOR,
-    "PID": PID_COLOR,
-    "Optimized PID": OPT_PID_COLOR,
-}
+from mpc_core.sim.theme import (  # noqa: F401 — re-export tokens for pages
+    BORDER,
+    BORDER_STRONG,
+    CANVAS,
+    COBALT,
+    COBALT_50,
+    COBALT_100,
+    COBALT_700,
+    COBALT_HOVER,
+    CONTROLLER_COLORS,
+    COPPER,
+    CRITICAL,
+    MPC_COLOR,
+    OPT_PID,
+    OPT_PID_COLOR,
+    PID,
+    PID_COLOR,
+    SUCCESS,
+    SURFACE,
+    SURFACE_SUBTLE,
+    SURFACE_SUNKEN,
+    TEXT_INVERSE,
+    TEXT_MUTED,
+    TEXT_PRIMARY,
+    TEXT_SECONDARY,
+    WARNING,
+)
 
 
 @dataclass(frozen=True)

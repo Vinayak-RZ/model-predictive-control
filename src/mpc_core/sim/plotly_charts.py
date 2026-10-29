@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from mpc_core.sim.simulate import SimulationResult
-from mpc_core.sim.ui import (
+from mpc_core.sim.theme import (
+    ACCENT,
     BORDER,
     COBALT,
     COPPER,
@@ -19,7 +21,8 @@ from mpc_core.sim.ui import (
     TEXT_SECONDARY,
 )
 
-ACCENT = COBALT
+if TYPE_CHECKING:
+    from mpc_core.sim.simulate import SimulationResult
 
 
 def _base_layout(**kwargs) -> dict:
