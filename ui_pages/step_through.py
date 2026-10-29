@@ -9,11 +9,10 @@ from mpc_core.sim.copy_text import STEP_LEDE, STEP_TITLE
 from mpc_core.sim.plotly_charts import mpc_horizon_figure
 from mpc_core.sim.scenarios import SCENARIOS
 from mpc_core.sim.simulate import run_mpc_step_log
-from mpc_core.sim.ui import inject_styles, page_header, sidebar_brand
+from mpc_core.sim.ui import inject_styles, page_header
 from mpc_core.sim.ui_cache import DEFAULT_STEP_HORIZON, load_step_log
 
 inject_styles()
-sidebar_brand()
 
 page_header(title=STEP_TITLE, look_for=STEP_LEDE)
 
@@ -78,10 +77,12 @@ with nav3:
         st.rerun()
 
 m1, m2, m3, m4 = st.columns(4)
+m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Applied power", f"{snap.u_applied:.2f} kW")
 m2.metric("Disturbance d̂", f"{snap.d_hat:.3f}")
-m3.metric("Measured / setpoint", f"{snap.y_meas:.1f} / {snap.y_ref:.1f} °C")
-m4.metric("Solve time", f"{snap.solve_ms:.2f} ms")
+m3.metric("Measured", f"{snap.y_meas:.1f} °C")
+m4.metric("Setpoint", f"{snap.y_ref:.1f} °C")
+m5.metric("Solve time", f"{snap.solve_ms:.2f} ms")
 
 st.plotly_chart(mpc_horizon_figure(snap), use_container_width=True)
 st.caption(snap.caption)

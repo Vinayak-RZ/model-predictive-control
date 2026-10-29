@@ -27,13 +27,11 @@ from mpc_core.sim.ui import (
     inject_styles,
     insight_strip,
     page_header,
-    sidebar_brand,
     violation_tone,
 )
 from mpc_core.sim.ui_cache import load_playground_triple
 
 inject_styles()
-sidebar_brand()
 
 if "playground_params" not in st.session_state:
     st.session_state.playground_params = PlaygroundParams()

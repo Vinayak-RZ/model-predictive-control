@@ -18,9 +18,7 @@
   <a href="report/report.md"><b>Report</b></a>
 </p>
 
-Three scripted scenarios, a **multipage Streamlit lab**, batch plots under `results/`, and an **82 s showcase video** (HyperFrames) driven by the same simulation JSON as the app.
-
-> Coursework simulation you can run today — not a field PLC program.
+Three scripted scenarios, a **multipage Streamlit lab** (precomputed UI data for fast opens), batch plots under `results/`, and an **82 s showcase video** (HyperFrames) driven by the same simulation JSON as the app.
 
 ## Quick start
 
@@ -30,24 +28,29 @@ pip install -r requirements.txt
 pip install -e ".[dev]"
 python3 -m pytest -q
 python3 examples/run_simulations.py
+python3 scripts/precompute_ui_data.py
 streamlit run app.py
 ```
 
 ## Interactive app
 
-**Playground** — compare MPC, PID, and optimized PID on one chart; presets, cached runs, MPC solve time.
+**Overview** — MPC vs PID on the same heater model, with a block diagram of the predictive loop.
 
-<img src="docs/streamlit-playground.png" width="900" alt="Streamlit Playground: temperature and heater power traces for MPC, PID, and optimized PID">
+<img src="docs/streamlit-overview.png" width="900" alt="Streamlit Overview: MPC Heater Lab landing page with MPC block diagram">
 
-**Step-through** — walk the receding horizon one MPC step at a time.
+**Playground** — compare MPC, PID, and optimised PID on one chart; presets load from disk.
 
-<img src="docs/streamlit-step-through.png" width="900" alt="Streamlit Step-through: MPC predicted temperature fan over the horizon">
+<img src="docs/streamlit-playground.png" width="900" alt="Streamlit Playground: temperature and heater power traces for MPC, PID, and optimised PID">
 
-**Scorecard** — same scenarios as batch runs; violations, settling, IAE (including model mismatch).
+**Step-through** — walk one MPC horizon at a time.
+
+<img src="docs/streamlit-step-through.png" width="900" alt="Streamlit Step-through: MPC predicted temperature over the horizon">
+
+**Scorecard** — same scenarios as the batch runs; violations, settling, IAE (including model mismatch).
 
 <img src="docs/streamlit-scorecard.png" width="900" alt="Streamlit Scorecard: metrics table and bar charts">
 
-Theme: `.streamlit/config.toml` (projector-friendly accent `#2563eb`).
+Theme: `.streamlit/config.toml` (cobalt accent `#2F6FEB`).
 
 ## Showcase video
 

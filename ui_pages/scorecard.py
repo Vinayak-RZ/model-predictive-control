@@ -11,11 +11,10 @@ from mpc_core.sim.copy_text import (
     SCORECARD_TITLE,
 )
 from mpc_core.sim.plotly_charts import grouped_metrics_figure, metrics_bar_chart
-from mpc_core.sim.ui import inject_styles, page_header, sidebar_brand
+from mpc_core.sim.ui import inject_styles, page_header
 from mpc_core.sim.ui_cache import load_scorecard_rows
 
 inject_styles()
-sidebar_brand()
 
 page_header(title=SCORECARD_TITLE, look_for=SCORECARD_LEDE)
 
@@ -41,6 +40,7 @@ scenario_pick = st.selectbox("Scenario", df["Scenario"].unique())
 subset = df[df["Scenario"] == scenario_pick].copy()
 controllers = subset["Controller"].tolist()
 
+st.markdown(f"##### {scenario_pick}")
 fig = grouped_metrics_figure(
     controllers,
     {
@@ -48,7 +48,7 @@ fig = grouped_metrics_figure(
         "Settling [s]": subset["Settling [s]"].fillna(0).tolist(),
         "Violations": subset["Violations"].fillna(0).tolist(),
     },
-    title=scenario_pick,
+    title="",
 )
 st.plotly_chart(fig, use_container_width=True)
 

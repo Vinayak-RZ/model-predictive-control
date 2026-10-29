@@ -33,11 +33,11 @@ def _base_layout(**kwargs) -> dict:
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
+            y=1.12,
             x=0,
             font=dict(size=13),
         ),
-        margin=dict(l=48, r=24, t=56, b=48),
+        margin=dict(l=48, r=24, t=72, b=48),
         hovermode="x unified",
     )
     layout.update(kwargs)
@@ -332,14 +332,17 @@ def grouped_metrics_figure(
                 cliponaxis=False,
             )
         )
-    fig.update_layout(
-        **_base_layout(
-            title=dict(text=title, font=dict(size=16, color=TEXT_PRIMARY)),
-            barmode="group",
-            height=380,
-            margin=dict(l=40, r=20, t=60, b=40),
-            legend=dict(orientation="h", yanchor="bottom", y=1.08, x=0),
-        )
+    layout_kwargs: dict = dict(
+        barmode="group",
+        height=400,
+        margin=dict(l=40, r=20, t=36, b=72),
+        legend=dict(orientation="h", yanchor="top", y=-0.18, x=0, xanchor="left"),
     )
+    if title:
+        layout_kwargs["title"] = dict(
+            text=title, font=dict(size=16, color=TEXT_PRIMARY), y=0.98
+        )
+        layout_kwargs["margin"] = dict(l=40, r=20, t=56, b=72)
+    fig.update_layout(**_base_layout(**layout_kwargs))
     _style_axes(fig)
     return fig

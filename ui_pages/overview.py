@@ -12,10 +12,9 @@ from mpc_core.sim.copy_text import (
     OVERVIEW_PAGES,
     OVERVIEW_TITLE,
 )
-from mpc_core.sim.ui import inject_styles, page_header, sidebar_brand
+from mpc_core.sim.ui import inject_styles, page_header
 
 inject_styles()
-sidebar_brand()
 
 page_header(title=OVERVIEW_TITLE, look_for=OVERVIEW_LEDE)
 
