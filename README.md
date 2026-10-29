@@ -18,7 +18,7 @@
   <a href="report/report.md"><b>Report</b></a>
 </p>
 
-Three scripted scenarios, a **multipage Streamlit lab**, batch plots under `results/`, and a **78 s showcase video** driven by the same simulation exports.
+Three scripted scenarios, a **multipage Streamlit lab**, batch plots under `results/`, and an **82 s showcase video** (HyperFrames) driven by the same simulation JSON as the app.
 
 > Coursework simulation you can run today — not a field PLC program.
 
@@ -35,21 +35,41 @@ streamlit run app.py
 
 ## Interactive app
 
-| Playground | Step-through MPC | Scorecard |
-| --- | --- | --- |
-| ![Playground](docs/streamlit-playground.png) | ![Step-through](docs/streamlit-step-through.png) | ![Scorecard](docs/streamlit-scorecard.png) |
+**Playground** — compare MPC, PID, and optimized PID on one chart; presets, cached runs, MPC solve time.
 
-- **Playground** — sliders for setpoint, disturbance, noise, PID gains, MPC horizon/weight; one-click presets; MPC solve time per step.
-- **Step-through** — prev/next through MPC predictions and the first applied move.
-- **Scorecard** — IAE, overshoot, settling, energy, violations for all three controllers (includes an honest **model mismatch** row).
+<img src="docs/streamlit-playground.png" width="900" alt="Streamlit Playground: temperature and heater power traces for MPC, PID, and optimized PID">
 
-Theme: `.streamlit/config.toml` (projector-friendly, single accent `#2563eb`).
+**Step-through** — walk the receding horizon one MPC step at a time.
+
+<img src="docs/streamlit-step-through.png" width="900" alt="Streamlit Step-through: MPC predicted temperature fan over the horizon">
+
+**Scorecard** — same scenarios as batch runs; violations, settling, IAE (including model mismatch).
+
+<img src="docs/streamlit-scorecard.png" width="900" alt="Streamlit Scorecard: metrics table and bar charts">
+
+Theme: `.streamlit/config.toml` (projector-friendly accent `#2563eb`).
 
 ## Showcase video
 
-[![Video poster](docs/video-poster.png)](video/out/mpc-vs-pid.mp4)
+The cut focuses on **power limits and violations**: plain PID breaks slew rules (6 violation steps); MPC stays feasible with zero violations by planning ahead; optimized PID is shown honestly at zero violations after scenario-specific retuning.
 
-**File:** [`video/out/mpc-vs-pid.mp4`](video/out/mpc-vs-pid.mp4) · **Duration:** 78 s · **Size:** ~1.4 MB · **Source:** [`video/index.html`](video/index.html) (HyperFrames) + [`video/data/`](video/data/) JSON from `python3 scripts/export_video_data.py`.
+<p align="center">
+  <a href="https://raw.githubusercontent.com/Vinayak-RZ/model-predictive-control/main/video/out/mpc-vs-pid.mp4">
+    <img src="docs/video-poster.png" width="720" alt="Play showcase video (poster)">
+  </a>
+</p>
+
+<p align="center">
+  <video src="https://raw.githubusercontent.com/Vinayak-RZ/model-predictive-control/main/video/out/mpc-vs-pid.mp4" controls width="720" poster="docs/video-poster.png">
+    Your browser does not support inline video. <a href="https://raw.githubusercontent.com/Vinayak-RZ/model-predictive-control/main/video/out/mpc-vs-pid.mp4">Download the MP4</a>.
+  </video>
+</p>
+
+<p align="center">
+  <img src="docs/demo-preview.gif" width="720" alt="10 s preview of the power-limit animation">
+</p>
+
+**Repo copy:** [`video/out/mpc-vs-pid.mp4`](video/out/mpc-vs-pid.mp4) · **Duration:** 82 s · **Size:** ~1.8 MB · **Source:** [`video/index.html`](video/index.html) + [`video/data/`](video/data/) from `python3 scripts/export_video_data.py`.
 
 ## Proof (batch metrics)
 
