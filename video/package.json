@@ -1,0 +1,13 @@
+{
+  "name": "mpc-heater-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bundle": "python3 ../scripts/build_video_bundle.py",
+    "check": "npx hyperframes check",
+    "render": "npx hyperframes render -o out/mpc-vs-pid.mp4 -f 30 -q draft --crf 23 ."
+  },
+  "dependencies": {
+    "hyperframes": "^0.8.214"
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "historyId": "c39a516e-e5bb-4d6a-b1d2-5832385232eb",
+  "currentRevision": "668f66ca-e765-4f9e-87b7-3f7336de39b4",
+  "pendingChanges": false,
+  "files": {
+    "assets/ui-playground.png": {
+      "hash": "786ac1408fee2aad1fc9f12fc2f35e2fbf53b044a02ae7a5c18d00e371a9b069",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/78/786ac1408fee2aad1fc9f12fc2f35e2fbf53b044a02ae7a5c18d00e371a9b069"
+    },
+    "assets/ui-scorecard.png": {
+      "hash": "7519b401eb3d64e308af20a373b35c9b2c4e6e425e1e9b521cbc1d5be930fc98",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/75/7519b401eb3d64e308af20a373b35c9b2c4e6e425e1e9b521cbc1d5be930fc98"
+    },
+    "data/disturbance_race.json": {
+      "hash": "4df6700700da0a8000dc84287a996d98f78481232357753990766699173deb6d",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/4d/4df6700700da0a8000dc84287a996d98f78481232357753990766699173deb6d"
+    },
+    "data/horizon_frames.json": {
+      "hash": "d0ea8e43fd2ec7802fe2601f7c87ec9f3e9666abc7782c21043d0b9d5047e962",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/d0/d0ea8e43fd2ec7802fe2601f7c87ec9f3e9666abc7782c21043d0b9d5047e962"
+    },
+    "data/scorecard.json": {
+      "hash": "4360596cfb61384993a10216cfed2bcee5a5e5b3c9875d1bf2ed03e68d0089fc",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/43/4360596cfb61384993a10216cfed2bcee5a5e5b3c9875d1bf2ed03e68d0089fc"
+    },
+    "data/setpoint_jump.json": {
+      "hash": "d0de05cc58207edd0b207d33e1e0d0f7778a3d88037020ee556756700e7dd9d1",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/d0/d0de05cc58207edd0b207d33e1e0d0f7778a3d88037020ee556756700e7dd9d1"
+    },
+    "data_bundle.js": {
+      "hash": "862b2134daa8efc4365f0f36a6f9841ac89b95d0c61404a34fc6621cb4a85b51",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/86/862b2134daa8efc4365f0f36a6f9841ac89b95d0c61404a34fc6621cb4a85b51"
+    },
+    "hyperframes.json": {
+      "hash": "53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/53/53dbce1e19aa713cbb12ee0bc4d206143b45ab15e6ffbfcaa8f69572d4d24d50"
+    },
+    "index.html": {
+      "hash": "d375fb24bf1545e4c0da532a7f75c817f2761dd1027bbbfaba1a76f6d99874ef",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/d3/d375fb24bf1545e4c0da532a7f75c817f2761dd1027bbbfaba1a76f6d99874ef"
+    },
+    "meta.json": {
+      "hash": "538493a36a77cc4a27e6e146a36e80ea17ec8536bfe6652d5c19dd4f6be6710d",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/53/538493a36a77cc4a27e6e146a36e80ea17ec8536bfe6652d5c19dd4f6be6710d"
+    },
+    "package-lock.json": {
+      "hash": "d646becf065bc4f60d8099037e29576dd3fe04c4328713da579b2b1e7e1b0ed8",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/d6/d646becf065bc4f60d8099037e29576dd3fe04c4328713da579b2b1e7e1b0ed8"
+    },
+    "package.json": {
+      "hash": "dfb1303f195f973340937e1eafb78a0b7cef50ad8c91f7494c435a3dafc7af32",
+      "content": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/df/dfb1303f195f973340937e1eafb78a0b7cef50ad8c91f7494c435a3dafc7af32"
+    }
+  },
+  "revisions": {
+    "9279dba0-a0d8-4e43-8d3b-43941de59269": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1793263095353,
+      "endedAt": 1793263095353,
+      "files": {
+        "index.html": {
+          "before": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/1b/1b033d83bf20e6d71fca67b958887136c3e39cb83d83d04220e4fd3832790cdd",
+          "after": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/d3/d375fb24bf1545e4c0da532a7f75c817f2761dd1027bbbfaba1a76f6d99874ef"
+        }
+      }
+    },
+    "668f66ca-e765-4f9e-87b7-3f7336de39b4": {
+      "actor": {
+        "kind": "outside",
+        "name": "Outside"
+      },
+      "label": "Changed outside the app",
+      "startedAt": 1793263208978,
+      "endedAt": 1793263208984,
+      "files": {
+        "assets/ui-playground.png": {
+          "before": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/00/00bbb48989985d057a2bc2621725b5f483a4a75dd219ba8928d8496bd5cd24d4",
+          "after": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/78/786ac1408fee2aad1fc9f12fc2f35e2fbf53b044a02ae7a5c18d00e371a9b069"
+        },
+        "assets/ui-scorecard.png": {
+          "before": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/d5/d579a8a18550292d31dbd38a2b7e5463dfea542f6ab877ddd3ce8ea2d41e838e",
+          "after": "/home/ubuntu/.cache/hyperframes/history/c39a516e-e5bb-4d6a-b1d2-5832385232eb/blobs/75/7519b401eb3d64e308af20a373b35c9b2c4e6e425e1e9b521cbc1d5be930fc98"
+        }
+      }
+    }
+  },
+  "checks": {
+    "latest": {
+      "revision": null,
+      "id": "e8a8d541-255d-46bb-a18d-c4a00dbf94a7"
+    },
+    "revisions": {},
+    "unversioned": [
+      {
+        "id": "e8a8d541-255d-46bb-a18d-c4a00dbf94a7",
+        "scope": "project",
+        "report": "/workspace/video/.hyperframes/artifacts/checks/e8a8d541-255d-46bb-a18d-c4a00dbf94a7.json",
+        "metadata": {
+          "ok": true,
+          "browserSkipped": false,
+          "options": {
+            "samples": 9,
+            "atTransitions": false,
+            "maxIssues": 80,
+            "collapseStatic": true,
+            "tolerance": 2,
+            "timeout": 10000,
+            "contrast": true,
+            "strict": false,
+            "snapshots": false,
+            "browserGpuMode": "auto"
+          }
+        },
+        "createdAt": 1793263091462,
+        "contentHash": "912e20fea30fd6354b298136b904729e3980e72f018bb49340dc3a8ced564810",
+        "revision": null,
+        "inputFingerprint": "3ea01672b4e29ae27ed6c66fceeaef049e789dda0cc8bd66171129a1218d6115",
+        "inputScope": "local-project-files",
+        "attribution": "inputs-changed"
+      }
+    ]
+  },
+  "snapshots": {
+    "latest": null,
+    "revisions": {},
+    "unversioned": []
+  },
+  "renders": {
+    "latest": {
+      "id": "a9d0219e-12fb-48a7-8bb1-de442649c932",
+      "completedAt": 1793263262096,
+      "output": "/workspace/video/out/mpc-vs-pid.mp4",
+      "status": "completed",
+      "revision": "668f66ca-e765-4f9e-87b7-3f7336de39b4"
+    },
+    "retainedRevisions": [
+      "668f66ca-e765-4f9e-87b7-3f7336de39b4",
+      "9279dba0-a0d8-4e43-8d3b-43941de59269"
+    ]
+  },
+  "pendingArtifactCleanup": []
+}
