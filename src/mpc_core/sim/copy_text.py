@@ -7,9 +7,9 @@ SIDEBAR_BRAND = "MPC Heater Lab"
 OVERVIEW_TITLE = "MPC Heater Lab"
 OVERVIEW_LEDE = "Compare MPC and PID on the same heater model."
 OVERVIEW_MPC_BLURB = (
-    "The optimiser uses a model to plan inputs across a horizon, applies the first move, "
-    "then receives the plant’s measured state. This lets MPC plan ahead and respect power "
-    "and rate limits, while PID reacts to error."
+    "MPC runs a model forward over a horizon, picks a power plan that stays inside "
+    "the limits, applies the first move, then re-plans from the measured temperature. "
+    "PID only reacts to the error it sees now."
 )
 OVERVIEW_PAGES = (
     ("Playground", "Set conditions and compare MPC with PID."),
@@ -19,12 +19,13 @@ OVERVIEW_PAGES = (
 
 PLAYGROUND_TITLE = "Playground"
 PLAYGROUND_LEDE = (
-    "Open on tight power limits — that is where MPC’s plan-ahead edge shows against "
-    "a strong PID that was optimised once and not retuned."
+    "This page opens on a tight power and rate limit. That is the case where MPC keeps "
+    "the slew feasible, and the optimised PID (tuned once on a mild jump, then left alone) "
+    "does not."
 )
 PLAYGROUND_CAPTION = (
-    "Dashed lines mark power limits. Optimised PID gains are locked from the mild "
-    "setpoint jump (same gains on every preset); MPC is not retuned either."
+    "Dashed lines are the power limits. Optimised PID uses the same gains on every preset: "
+    "the ones found on the mild setpoint jump. MPC uses the same planner throughout."
 )
 
 STEP_TITLE = "Step-through"
@@ -32,10 +33,10 @@ STEP_LEDE = "See how MPC plans each move on the heater."
 
 SCORECARD_TITLE = "Scorecard"
 SCORECARD_LEDE = (
-    "Same plant, same limits. Optimised PID uses gains locked from the setpoint jump; "
-    "MPC keeps the same planner. Watch limit hits and settling — not a retune contest."
+    "Same plant, same limits. Optimised PID keeps the gains from the mild setpoint jump. "
+    "MPC keeps the same planner. Compare limit hits and settling time."
 )
 SCORECARD_POWER_TEMPLATE = (
     "Power-limit hits: PID {pid_n}, MPC {mpc_n}, optimised PID {opt_n}. "
-    "MPC stays inside the window by construction; the frozen Opt. PID can still clip."
+    "MPC plans inside the window and the rate limit. The frozen Opt. PID can still clip them."
 )

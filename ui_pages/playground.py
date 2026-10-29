@@ -135,23 +135,24 @@ with chart_col:
     opt_settle = settle_s["Opt. PID"]
     if mpc_hits < opt_hits:
         st.success(
-            f"MPC stays inside the limits ({mpc_hits} hits) while Opt. PID records "
-            f"{opt_hits}. Same frozen PID gains as the mild setpoint jump — not retuned here."
+            f"MPC: {mpc_hits} limit hits. Opt. PID: {opt_hits}. "
+            "Those Opt. PID gains were locked on the mild setpoint jump and not "
+            "retuned on this run."
         )
     elif mpc_hits == opt_hits and mpc_settle is not None and opt_settle is not None:
         if mpc_settle < opt_settle:
             st.success(
-                f"MPC settles faster ({mpc_settle:.0f} s vs {opt_settle:.0f} s) with "
-                f"the same limit-hit count ({mpc_hits})."
+                f"MPC settles in {mpc_settle:.0f} s, Opt. PID in {opt_settle:.0f} s, "
+                f"with the same limit-hit count ({mpc_hits})."
             )
         elif mpc_settle <= opt_settle * 1.05:
             st.info(
-                "Settling is close. MPC’s edge is the explicit power/rate plan — "
-                "open Step-through to see the horizon, or keep the tight-power preset."
+                "Settling is close. Open Step-through to see the power plan MPC is using, "
+                "or stay on the tight-power preset."
             )
     elif mpc_hits == 0 and hits_n["PID"] > 0:
         st.success(
-            f"MPC records {mpc_hits} limit hits; hand-tuned PID records {hits_n['PID']}."
+            f"MPC: {mpc_hits} limit hits. Hand-tuned PID: {hits_n['PID']}."
         )
 
     if triple.mpc.mpc_solve_ms is not None:
@@ -231,6 +232,6 @@ with ctrl_col:
     tg = triple.tune.gains
     st.markdown("##### Optimised PID gains")
     st.caption(
-        f"Kp = **{tg.kp:.3g}**, Ki = **{tg.ki:.3g}**, Kd = **{tg.kd:.3g}** — "
-        "tracking-optimised on the mild setpoint jump, then frozen (not retuned here)."
+        f"Kp = **{tg.kp:.3g}**, Ki = **{tg.ki:.3g}**, Kd = **{tg.kd:.3g}**. "
+        "Found on the mild setpoint jump, then left unchanged on this preset."
     )

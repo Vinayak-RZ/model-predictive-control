@@ -54,7 +54,7 @@ Theme: `.streamlit/config.toml` (cobalt accent `#2F6FEB`).
 
 ## Showcase video
 
-The cut focuses on **power limits and violations**: plain PID breaks slew rules; MPC stays feasible with zero violations by planning ahead; optimised PID uses gains locked from the mild setpoint jump (not retuned on the tight-limit case).
+The cut focuses on power limits: plain PID breaks the slew; MPC stays inside the limits by planning ahead; optimised PID keeps the gains from the mild setpoint jump and is not retuned on the tight-limit case.
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/Vinayak-RZ/model-predictive-control/main/video/out/mpc-vs-pid.mp4">
@@ -97,7 +97,7 @@ Simulation plots:
 | --- | --- | --- |
 | ![Setpoint](results/setpoint_tracking.png) | ![Disturbance](results/disturbance_rejection.png) | ![Power](results/power_constraints.png) |
 
-**Fair comparison (UI):** optimised PID gains are tuned once on the mild setpoint jump (`baseline_optimized_pid` in `playground.py`), then frozen across presets and scorecard scenarios — you do not get a free retune for every operating condition. MPC uses the same planner throughout. Batch scripts may still retune per scenario for report tables. Heater power is clipped to `[u_min, u_max]` every step.
+**Fair comparison (UI):** optimised PID gains are tuned once on the mild setpoint jump (`baseline_optimized_pid` in `playground.py`), then frozen across presets and scorecard scenarios. You do not get a free retune for every operating condition. MPC uses the same planner throughout. Batch scripts may still retune per scenario for report tables. Heater power is clipped to `[u_min, u_max]` every step.
 
 ## How it works
 
