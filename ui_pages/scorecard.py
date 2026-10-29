@@ -10,7 +10,7 @@ from mpc_core.sim.copy_text import (
     SCORECARD_POWER_TEMPLATE,
     SCORECARD_TITLE,
 )
-from mpc_core.sim.plotly_charts import grouped_metrics_figure, metrics_bar_chart
+from mpc_core.sim.plotly_charts import grouped_metrics_figure
 from mpc_core.sim.ui import inject_styles, page_header
 from mpc_core.sim.ui_cache import load_scorecard_rows
 
@@ -51,17 +51,6 @@ fig = grouped_metrics_figure(
     title="",
 )
 st.plotly_chart(fig, use_container_width=True)
-
-detail_cols = st.columns(3)
-for col, metric in zip(detail_cols, ("IAE", "Settling [s]", "Violations")):
-    with col:
-        fig_m = metrics_bar_chart(
-            subset["Controller"].tolist(),
-            subset[metric].fillna(0).tolist(),
-            title=metric,
-            y_title=metric,
-        )
-        st.plotly_chart(fig_m, use_container_width=True)
 
 st.markdown("##### Metrics table")
 st.dataframe(

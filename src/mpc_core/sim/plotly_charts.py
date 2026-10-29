@@ -334,13 +334,17 @@ def grouped_metrics_figure(
         )
     layout_kwargs: dict = dict(
         barmode="group",
-        height=400,
-        margin=dict(l=40, r=20, t=36, b=72),
-        legend=dict(orientation="h", yanchor="top", y=-0.18, x=0, xanchor="left"),
+        height=380,
+        margin=dict(l=40, r=20, t=56, b=48),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, xanchor="left"),
     )
     if title:
         layout_kwargs["title"] = dict(
             text=title, font=dict(size=16, color=TEXT_PRIMARY), y=0.98
+        )
+        layout_kwargs["margin"] = dict(l=40, r=20, t=72, b=48)
+        layout_kwargs["legend"] = dict(
+            orientation="h", yanchor="top", y=-0.2, x=0, xanchor="left"
         )
         layout_kwargs["margin"] = dict(l=40, r=20, t=56, b=72)
     fig.update_layout(**_base_layout(**layout_kwargs))
