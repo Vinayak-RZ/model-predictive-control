@@ -199,7 +199,7 @@ def mpc_horizon_figure(snapshot) -> go.Figure:
     future_t = [snapshot.time_s + i for i in range(1, h + 1)]
     fig = go.Figure()
 
-    # Past band (conceptual): shade before now
+    # Soft past / future bands only (no overlapping annotation text).
     fig.add_vrect(
         x0=snapshot.time_s - 8,
         x1=snapshot.time_s,
@@ -207,9 +207,6 @@ def mpc_horizon_figure(snapshot) -> go.Figure:
         opacity=0.35,
         layer="below",
         line_width=0,
-        annotation_text="Past",
-        annotation_position="top left",
-        annotation_font=dict(size=11, color=TEXT_MUTED),
     )
     fig.add_vrect(
         x0=snapshot.time_s,
@@ -218,9 +215,6 @@ def mpc_horizon_figure(snapshot) -> go.Figure:
         opacity=0.04,
         layer="below",
         line_width=0,
-        annotation_text="Predicted horizon",
-        annotation_position="top left",
-        annotation_font=dict(size=11, color=COBALT),
     )
 
     fig.add_trace(
@@ -242,7 +236,6 @@ def mpc_horizon_figure(snapshot) -> go.Figure:
             marker=dict(size=6, color=ACCENT),
         )
     )
-    # Emphasize first planned move endpoint
     if future_t:
         fig.add_trace(
             go.Scatter(
@@ -260,24 +253,15 @@ def mpc_horizon_figure(snapshot) -> go.Figure:
         line_color=TEXT_PRIMARY,
         line_width=1.5,
         annotation_text="Setpoint",
+        annotation_position="top right",
         annotation_font=dict(size=12, color=TEXT_PRIMARY),
-    )
-    fig.add_annotation(
-        x=snapshot.time_s,
-        y=snapshot.y_meas,
-        text=f"Apply {snapshot.u_applied:.1f} kW",
-        showarrow=True,
-        arrowhead=2,
-        ax=40,
-        ay=-40,
-        font=dict(size=12, color=COBALT),
     )
     fig.update_layout(
         **_base_layout(
             height=460,
             xaxis_title="Time [s]",
             yaxis_title="Temperature [°C]",
-            margin=dict(l=48, r=24, t=40, b=48),
+            margin=dict(l=48, r=24, t=56, b=48),
         )
     )
     _style_axes(fig)

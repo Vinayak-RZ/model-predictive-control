@@ -1,4 +1,4 @@
-"""Playground: three controllers on one chart with presets and caching."""
+"""Playground: three controllers on one chart with presets and disk-first cache."""
 
 from __future__ import annotations
 
@@ -6,6 +6,11 @@ import numpy as np
 import streamlit as st
 
 from mpc_core.sim.config import default_demo_config
+from mpc_core.sim.copy_text import (
+    PLAYGROUND_CAPTION,
+    PLAYGROUND_LEDE,
+    PLAYGROUND_TITLE,
+)
 from mpc_core.sim.pid import PIDGains
 from mpc_core.sim.playground import (
     PRESETS,
@@ -25,8 +30,8 @@ from mpc_core.sim.ui import (
     sidebar_brand,
     violation_tone,
 )
+from mpc_core.sim.ui_cache import load_playground_triple
 
-st.set_page_config(page_title="Playground · MPC Heater Lab", layout="wide")
 inject_styles()
 sidebar_brand()
 
@@ -58,17 +63,16 @@ def cached_triple(key: tuple, tune_maxiter: int = 28):
     )
 
 
-page_header(
-    eyebrow="Live compare",
-    title="Playground",
-    look_for=(
-        "MPC often ramps power before the setpoint step; plain PID reacts after error "
-        "grows; optimized PID sits between them but still lacks preview."
-    ),
-)
+def resolve_triple(p: PlaygroundParams):
+    disk = load_playground_triple(p)
+    if disk is not None:
+        return disk
+    return cached_triple(_params_key(p))
+
+
+page_header(title=PLAYGROUND_TITLE, look_for=PLAYGROUND_LEDE)
 controller_legend()
 
-# Presets — equal-width row (One Action Rule: Update stays the only primary later)
 st.markdown("##### Presets")
 pcols = st.columns(5)
 preset_actions = [
@@ -86,7 +90,7 @@ if pcols[4].button("Reset defaults", type="secondary", use_container_width=True)
     st.rerun()
 
 params: PlaygroundParams = st.session_state.playground_params
-triple = cached_triple(_params_key(params))
+triple = resolve_triple(params)
 
 chart_col, ctrl_col = st.columns([2.2, 1], gap="large")
 
@@ -126,9 +130,7 @@ with chart_col:
         p95 = float(np.percentile(triple.mpc.mpc_solve_ms, 95))
         st.caption(f"MPC solve time — mean {avg_ms:.2f} ms / p95 {p95:.2f} ms per step.")
 
-    st.caption(
-        "Dashed power lines are min/max kW. Copper marker = disturbance; gray = setpoint step."
-    )
+    st.caption(PLAYGROUND_CAPTION)
 
 with ctrl_col:
     with st.form("sliders", border=False):
@@ -167,7 +169,9 @@ with ctrl_col:
                 "MPC tracking weight", 0.2, 5.0, float(p.mpc_tracking_weight), 0.1
             )
 
-        submitted = st.form_submit_button("Update simulation", type="primary", use_container_width=True)
+        submitted = st.form_submit_button(
+            "Update simulation", type="primary", use_container_width=True
+        )
 
     if submitted:
         ev = None if dist_kind == "none" or dist_at <= 0 else dist_kind
@@ -196,7 +200,7 @@ with ctrl_col:
         st.rerun()
 
     tg = triple.tune.gains
-    st.markdown("##### Optimized PID gains")
+    st.markdown("##### Optimised PID gains")
     st.caption(
         f"Kp = **{tg.kp:.3g}**, Ki = **{tg.ki:.3g}**, Kd = **{tg.kd:.3g}** "
         "(minimise IAE + violation penalty on this scenario)."

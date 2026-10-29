@@ -44,13 +44,12 @@ class InsightItem:
 
 
 def sidebar_brand() -> None:
-    """Short brand line above the multipage nav for the live demo."""
+    """Product name in the sidebar."""
+    from mpc_core.sim.copy_text import SIDEBAR_BRAND
+
     st.sidebar.markdown(
-        f'<p style="font-size:11px;font-weight:600;letter-spacing:0.06em;'
-        f'text-transform:uppercase;color:{TEXT_MUTED};margin:0 0 2px 0;">'
-        f'MPC Heater Lab</p>'
-        f'<p style="font-size:13px;color:{TEXT_SECONDARY};margin:0 0 12px 0;">'
-        f'Professor walkthrough</p>',
+        f'<p style="font-size:13px;font-weight:600;color:{TEXT_PRIMARY};'
+        f'margin:0 0 12px 0;">{SIDEBAR_BRAND}</p>',
         unsafe_allow_html=True,
     )
 
@@ -259,9 +258,12 @@ div[data-testid="stMetric"] {{
     )
 
 
-def page_header(*, title: str, eyebrow: str, look_for: str) -> None:
+def page_header(*, title: str, look_for: str, eyebrow: str | None = None) -> None:
+    eyebrow_html = (
+        f'<p class="lab-eyebrow">{eyebrow}</p>' if eyebrow else ""
+    )
     st.markdown(
-        f'<p class="lab-eyebrow">{eyebrow}</p>'
+        f"{eyebrow_html}"
         f'<h1 class="lab-title">{title}</h1>'
         f'<p class="lab-lookfor">{look_for}</p>',
         unsafe_allow_html=True,

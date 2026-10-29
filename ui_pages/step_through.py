@@ -1,27 +1,21 @@
-"""Step-through MPC horizon for teaching receding-horizon control."""
+"""Step-through MPC horizon."""
 
 from __future__ import annotations
 
 import streamlit as st
 
 from mpc_core.sim.config import default_demo_config
+from mpc_core.sim.copy_text import STEP_LEDE, STEP_TITLE
 from mpc_core.sim.plotly_charts import mpc_horizon_figure
 from mpc_core.sim.scenarios import SCENARIOS
 from mpc_core.sim.simulate import run_mpc_step_log
 from mpc_core.sim.ui import inject_styles, page_header, sidebar_brand
+from mpc_core.sim.ui_cache import DEFAULT_STEP_HORIZON, load_step_log
 
-st.set_page_config(page_title="Step-through · MPC Heater Lab", layout="wide")
 inject_styles()
 sidebar_brand()
 
-page_header(
-    eyebrow="Receding horizon",
-    title="Step-through",
-    look_for=(
-        "At each sample MPC plans a temperature fan over the horizon, then applies "
-        "only the first power move. Step forward to see the plan rewrite."
-    ),
-)
+page_header(title=STEP_TITLE, look_for=STEP_LEDE)
 
 top_l, top_r = st.columns([2, 1])
 with top_l:
@@ -31,23 +25,23 @@ with top_l:
         format_func=lambda k: SCENARIOS[k].title,
     )
 with top_r:
-    horizon = st.slider("Horizon steps", 5, 35, 25)
+    horizon = st.slider("Horizon steps", 5, 35, DEFAULT_STEP_HORIZON)
 
 cfg = default_demo_config()
 
 
-@st.cache_data
-def load_log(key: str, h: int):
+@st.cache_data(show_spinner="Loading MPC steps…")
+def compute_log(key: str, h: int):
     sc = SCENARIOS[key]
     return run_mpc_step_log(sc, cfg=cfg, horizon_steps=h, max_steps=70)
 
 
-log = load_log(scenario_key, horizon)
+disk_log = load_step_log(scenario_key, horizon)
+log = disk_log if disk_log is not None else compute_log(scenario_key, horizon)
 
 if "mpc_step_idx" not in st.session_state:
     st.session_state.mpc_step_idx = 0
 
-# Reset step when scenario/horizon changes
 state_key = f"{scenario_key}:{horizon}"
 if st.session_state.get("mpc_step_key") != state_key:
     st.session_state.mpc_step_key = state_key

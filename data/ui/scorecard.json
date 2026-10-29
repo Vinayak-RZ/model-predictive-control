@@ -1,0 +1,112 @@
+{
+  "rows": [
+    {
+      "Scenario": "Setpoint Tracking",
+      "Controller": "MPC",
+      "IAE": 1824.3047261019337,
+      "Overshoot %": 2.8464316641024823,
+      "Settling [s]": 101.0,
+      "Energy [kWh]": 5.7946690675964785,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Setpoint Tracking",
+      "Controller": "PID",
+      "IAE": 2476.8821562098565,
+      "Overshoot %": 0.0,
+      "Settling [s]": 179.0,
+      "Energy [kWh]": 4.882318560184072,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Setpoint Tracking",
+      "Controller": "Optimized PID",
+      "IAE": 1516.7699858917572,
+      "Overshoot %": 0.24893310912343483,
+      "Settling [s]": 100.0,
+      "Energy [kWh]": 5.427230829357579,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Disturbance Rejection",
+      "Controller": "MPC",
+      "IAE": 954.945487365502,
+      "Overshoot %": 2.932138930683006,
+      "Settling [s]": 62.0,
+      "Energy [kWh]": 3.812089722128319,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Disturbance Rejection",
+      "Controller": "PID",
+      "IAE": 1089.8586926836206,
+      "Overshoot %": 0.02508540507785315,
+      "Settling [s]": 103.0,
+      "Energy [kWh]": 3.558647442579107,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Disturbance Rejection",
+      "Controller": "Optimized PID",
+      "IAE": 585.7943505885404,
+      "Overshoot %": 0.3657349001502019,
+      "Settling [s]": 60.0,
+      "Energy [kWh]": 3.6072911616018413,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Power Constraints",
+      "Controller": "MPC",
+      "IAE": 9480.125331794081,
+      "Overshoot %": 0.0,
+      "Settling [s]": 199.0,
+      "Energy [kWh]": 7.745902377532467,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Power Constraints",
+      "Controller": "PID",
+      "IAE": 9153.317475280775,
+      "Overshoot %": 0.0,
+      "Settling [s]": 199.0,
+      "Energy [kWh]": 7.985763308948222,
+      "Violations": 6
+    },
+    {
+      "Scenario": "Power Constraints",
+      "Controller": "Optimized PID",
+      "IAE": 9032.603246382894,
+      "Overshoot %": 0.0,
+      "Settling [s]": 199.0,
+      "Energy [kWh]": 8.073318328502369,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Model Mismatch",
+      "Controller": "MPC",
+      "IAE": 2009.0488586178149,
+      "Overshoot %": 2.885450541648057,
+      "Settling [s]": 111.0,
+      "Energy [kWh]": 6.699708905338507,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Model Mismatch",
+      "Controller": "PID",
+      "IAE": 2541.178920880652,
+      "Overshoot %": 0.0,
+      "Settling [s]": 167.0,
+      "Energy [kWh]": 5.781644166181909,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Model Mismatch",
+      "Controller": "Optimized PID",
+      "IAE": 1695.1545291276773,
+      "Overshoot %": 0.325162869567149,
+      "Settling [s]": 109.0,
+      "Energy [kWh]": 6.247249476295401,
+      "Violations": 0
+    }
+  ]
+}
