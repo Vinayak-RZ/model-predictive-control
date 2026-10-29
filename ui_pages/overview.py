@@ -19,13 +19,9 @@ sidebar_brand()
 
 page_header(title=OVERVIEW_TITLE, look_for=OVERVIEW_LEDE)
 
-diagram = Path(__file__).resolve().parents[1] / "assets" / "mpc-block-diagram.png"
+diagram = Path(__file__).resolve().parents[1] / "assets" / "mpc-infographic.png"
 if diagram.exists():
     st.image(str(diagram), use_container_width=True)
-    st.caption(
-        "Model predictive control loop "
-        "(source: University of Stuttgart, Group of Frank Allgöwer)."
-    )
 
 st.markdown(OVERVIEW_MPC_BLURB)
 
