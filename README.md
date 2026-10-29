@@ -1,13 +1,11 @@
+# MPC Heater Lab
+
 <p align="center">
-  <img src="assets/mpc-heater-lab-logo.svg" width="168" alt="MPC Heater Lab helper">
+  <img src="assets/mpc-infographic.png" width="920" alt="Model Predictive Control infographic: optimiser, simulation model, and plant feedback loop">
 </p>
 
-<h1 align="center">
-  <img src="assets/mpc-heater-lab-wordmark.svg" width="380" alt="MPC Heater Lab">
-</h1>
-
 <p align="center">
-  <strong>Offset-free MPC vs hand-tuned PID vs optimized PID on a heat-balance heater model.</strong>
+  <strong>Offset-free MPC vs hand-tuned PID vs optimised PID on a heat-balance heater model.</strong>
 </p>
 
 <p align="center">
@@ -18,7 +16,7 @@
   <a href="report/report.md"><b>Report</b></a>
 </p>
 
-Three scripted scenarios, a **multipage Streamlit lab** (precomputed UI data for fast opens), batch plots under `results/`, and an **82 s showcase video** (HyperFrames) driven by the same simulation JSON as the app.
+Three scripted scenarios, a multipage Streamlit lab (precomputed UI data for fast opens), batch plots under `results/`, and an 82 s showcase video driven by the same simulation JSON as the app.
 
 ## Quick start
 
@@ -38,7 +36,7 @@ Theme: `.streamlit/config.toml` (cobalt accent `#2F6FEB`). Regen shots with the 
 
 ### Overview
 
-MPC vs PID on the same heater model, with a block diagram of the predictive loop.
+Landing page with the same MPC loop diagram and short paths into the lab.
 
 <p align="center">
   <img src="docs/streamlit-overview.png" width="920" alt="Streamlit Overview: MPC Heater Lab landing page with MPC block diagram">
@@ -62,7 +60,7 @@ Compare MPC, PID, and optimised PID on one chart. Presets load from disk. Cold o
 | :---: | :---: |
 | <img src="docs/streamlit-playground-heat-loss-noise.png" width="440" alt="Playground heat-loss bump with sensor noise"> | <img src="docs/streamlit-playground-tight-power.png" width="440" alt="Playground tight power and rate limits"> |
 
-| Soft limits + retuned hand PID | Model mismatch |
+| Soft limits + different knobs | Model mismatch |
 | :---: | :---: |
 | <img src="docs/streamlit-playground-soft-limits.png" width="440" alt="Playground soft limits and different controller knobs"> | <img src="docs/streamlit-playground-mismatch.png" width="440" alt="Playground plant/model mismatch"> |
 
@@ -106,9 +104,9 @@ The cut focuses on power limits: plain PID breaks the slew; MPC stays inside the
 
 ## Proof (batch metrics)
 
-From [`results/metrics_summary.json`](results/metrics_summary.json) after `python3 examples/run_simulations.py`:
+Figures below match the Streamlit scorecard used for the presentation deck (`presentation.py`).
 
-| Scenario | Metric | MPC | PID | Optimized PID |
+| Scenario | Metric | MPC | PID | Optimised PID |
 | --- | --- | --- | --- | --- |
 | Setpoint tracking | Settling [s] | **88** | 179 | 112 |
 | Disturbance rejection | Settling [s] | **54** | 103 | 71 |
@@ -116,13 +114,11 @@ From [`results/metrics_summary.json`](results/metrics_summary.json) after `pytho
 | Power limits | Settling [s] | **152** | 199 | 199 |
 | Model mismatch | Settling [s] | **96** | 167 | 124 |
 
-Figures above match the Streamlit scorecard used for the presentation deck (`presentation.py`).
-
 Simulation plots:
 
 | Setpoint | Disturbance | Power limits |
-| --- | --- | --- |
-| ![Setpoint](results/setpoint_tracking.png) | ![Disturbance](results/disturbance_rejection.png) | ![Power](results/power_constraints.png) |
+| :---: | :---: | :---: |
+| <img src="results/setpoint_tracking.png" width="280" alt="Setpoint tracking plot"> | <img src="results/disturbance_rejection.png" width="280" alt="Disturbance rejection plot"> | <img src="results/power_constraints.png" width="280" alt="Power limits plot"> |
 
 **Fair comparison (UI):** optimised PID gains are tuned once on the mild setpoint jump (`baseline_optimized_pid` in `playground.py`), then frozen across presets and scorecard scenarios. You do not get a free retune for every operating condition. MPC uses the same planner throughout. Batch scripts may still retune per scenario for report tables. Heater power is clipped to `[u_min, u_max]` every step.
 
@@ -134,7 +130,7 @@ Simulation plots:
                     ▼ u [kW]
               CasADi heater plant ──► temperature [°C]
                     ▲
-         PID + optimized PID (same plant, same metrics)
+         PID + optimised PID (same plant, same metrics)
 ```
 
 Details: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.md`](report/report.md)
