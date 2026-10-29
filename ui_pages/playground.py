@@ -65,9 +65,10 @@ def cached_triple(key: tuple, tune_maxiter: int = 28):
 
 def resolve_triple(p: PlaygroundParams):
     disk = load_playground_triple(p)
-    if disk is not None:
-        return polish_triple_for_demo(disk)
-    return polish_triple_for_demo(cached_triple(_params_key(p)))
+    raw = disk if disk is not None else cached_triple(_params_key(p))
+    return polish_triple_for_demo(
+        raw, u_min=p.u_min, u_max=p.u_max, du_max=p.du_max
+    )
 
 
 page_header(title=PLAYGROUND_TITLE, look_for=PLAYGROUND_LEDE)

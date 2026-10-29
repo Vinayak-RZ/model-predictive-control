@@ -71,6 +71,11 @@ def triple_control_figure(
     step_at_s: float | None = None,
     disturbance_at_s: float | None = None,
 ) -> go.Figure:
+    from mpc_core.sim.presentation import PRESENTATION_DEMO
+
+    # In the presentation deck, draw MPC on top and a touch heavier so it reads first.
+    mpc_w = 3.0 if PRESENTATION_DEMO else 2.5
+    other_w = 1.7 if PRESENTATION_DEMO else 2.0
     fig = make_subplots(
         rows=2,
         cols=1,
@@ -89,13 +94,9 @@ def triple_control_figure(
         row=1,
         col=1,
     )
+    # PID / Opt first, MPC last so the winner sits on top of the stack.
     fig.add_trace(
-        go.Scatter(x=t, y=mpc.y_c, name="MPC", line=dict(color=MPC_COLOR, width=2.5)),
-        row=1,
-        col=1,
-    )
-    fig.add_trace(
-        go.Scatter(x=t, y=pid.y_c, name="PID", line=dict(color=PID_COLOR, width=2)),
+        go.Scatter(x=t, y=pid.y_c, name="PID", line=dict(color=PID_COLOR, width=other_w)),
         row=1,
         col=1,
     )
@@ -104,21 +105,23 @@ def triple_control_figure(
             x=t,
             y=opt_pid.y_c,
             name="Optimized PID",
-            line=dict(color=OPT_PID_COLOR, width=2),
+            line=dict(color=OPT_PID_COLOR, width=other_w),
         ),
         row=1,
         col=1,
     )
     fig.add_trace(
-        go.Scatter(
-            x=t, y=mpc.u_kw, name="MPC power", line=dict(color=MPC_COLOR, width=2), showlegend=False
-        ),
-        row=2,
+        go.Scatter(x=t, y=mpc.y_c, name="MPC", line=dict(color=MPC_COLOR, width=mpc_w)),
+        row=1,
         col=1,
     )
     fig.add_trace(
         go.Scatter(
-            x=t, y=pid.u_kw, name="PID power", line=dict(color=PID_COLOR, width=2), showlegend=False
+            x=t,
+            y=pid.u_kw,
+            name="PID power",
+            line=dict(color=PID_COLOR, width=other_w),
+            showlegend=False,
         ),
         row=2,
         col=1,
@@ -128,7 +131,18 @@ def triple_control_figure(
             x=t,
             y=opt_pid.u_kw,
             name="Opt. PID power",
-            line=dict(color=OPT_PID_COLOR, width=2),
+            line=dict(color=OPT_PID_COLOR, width=other_w),
+            showlegend=False,
+        ),
+        row=2,
+        col=1,
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=t,
+            y=mpc.u_kw,
+            name="MPC power",
+            line=dict(color=MPC_COLOR, width=mpc_w),
             showlegend=False,
         ),
         row=2,
@@ -316,20 +330,33 @@ def grouped_metrics_figure(
     title: str,
 ) -> go.Figure:
     """Side-by-side controller bars for several metrics on one figure."""
+    from mpc_core.sim.presentation import PRESENTATION_DEMO
+
     fig = go.Figure()
     metric_names = list(metrics.keys())
-    for ctrl in controllers:
+    draw_order = list(controllers)
+    if PRESENTATION_DEMO and any(c.strip().lower() == "mpc" for c in controllers):
+        draw_order = [c for c in controllers if c.strip().lower() != "mpc"] + [
+            c for c in controllers if c.strip().lower() == "mpc"
+        ]
+    for ctrl in draw_order:
         idx = controllers.index(ctrl)
         ys = [metrics[m][idx] for m in metric_names]
+        is_mpc = ctrl.strip().lower() == "mpc"
         fig.add_trace(
             go.Bar(
                 name=ctrl,
                 x=metric_names,
                 y=ys,
                 marker_color=controller_color(ctrl),
+                marker_line=dict(
+                    width=1.5 if (PRESENTATION_DEMO and is_mpc) else 0,
+                    color=MPC_COLOR if is_mpc else "rgba(0,0,0,0)",
+                ),
                 text=[f"{v:.0f}" if abs(v) >= 10 else f"{v:.1f}" for v in ys],
                 textposition="outside",
                 cliponaxis=False,
+                opacity=1.0 if (not PRESENTATION_DEMO or is_mpc) else 0.88,
             )
         )
     layout_kwargs: dict = dict(
