@@ -25,9 +25,40 @@ def _series(run) -> dict:
     }
 
 
+def _violation_times(run, u_min: float, u_max: float, du_max: float) -> list[float]:
+    times: list[float] = []
+    u = run.u_kw
+    t = run.time_s
+    for i in range(len(u)):
+        if u[i] < u_min - 1e-9 or u[i] > u_max + 1e-9:
+            times.append(float(t[i]))
+        if i > 0 and abs(u[i] - u[i - 1]) > du_max + 1e-6:
+            times.append(float(t[i]))
+    return times
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     cfg = default_demo_config()
+
+    power = SCENARIOS["power_constraints"]
+    triple_pw = run_triple(power, cfg=cfg, tune_maxiter=30)
+    lo, hi, du = power.limits_override or (0.0, 250.0, 25.0)
+    (OUT / "power_limits.json").write_text(
+        json.dumps(
+            {
+                "mpc": _series(triple_pw.mpc),
+                "pid": _series(triple_pw.pid),
+                "optimized_pid": _series(triple_pw.optimized_pid),
+                "limits": {"u_min": lo, "u_max": hi, "du_max": du},
+                "violation_times_s": {
+                    "pid": _violation_times(triple_pw.pid, lo, hi, du),
+                },
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
 
     setpoint = SCENARIOS["setpoint_tracking"]
     triple_sp = run_triple(setpoint, cfg=cfg, tune_maxiter=30)
@@ -38,20 +69,6 @@ def main() -> None:
                 "pid": _series(triple_sp.pid),
                 "optimized_pid": _series(triple_sp.optimized_pid),
                 "limits": {"u_min": 0.0, "u_max": 250.0},
-            },
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
-
-    dist = SCENARIOS["disturbance_rejection"]
-    triple_d = run_triple(dist, cfg=cfg, tune_maxiter=30)
-    (OUT / "disturbance_race.json").write_text(
-        json.dumps(
-            {
-                "mpc": _series(triple_d.mpc),
-                "pid": _series(triple_d.pid),
-                "optimized_pid": _series(triple_d.optimized_pid),
             },
             indent=2,
         ),
@@ -81,9 +98,18 @@ def main() -> None:
 
     from mpc_core.sim.simulate import run_mpc_step_log
 
-    log = run_mpc_step_log(setpoint, cfg=cfg, horizon_steps=20, max_steps=12)
+    log = run_mpc_step_log(
+        power,
+        cfg=cfg,
+        horizon_steps=power.mpc_horizon or 30,
+        max_steps=200,
+    )
     horizon_frames = []
-    for snap in log.snapshots[10:22]:
+    for snap in log.snapshots:
+        if snap.time_s < 10 or snap.time_s > 120:
+            continue
+        if snap.planned_u < hi - 8:
+            continue
         horizon_frames.append(
             {
                 "t0": snap.time_s,
@@ -91,8 +117,23 @@ def main() -> None:
                 "y_ref": snap.y_ref,
                 "predicted_y": snap.predicted_y,
                 "u": snap.u_applied,
+                "u_max": hi,
             }
         )
+        if len(horizon_frames) >= 14:
+            break
+    if len(horizon_frames) < 4:
+        horizon_frames = [
+            {
+                "t0": s.time_s,
+                "y_meas": s.y_meas,
+                "y_ref": s.y_ref,
+                "predicted_y": s.predicted_y,
+                "u": s.u_applied,
+                "u_max": hi,
+            }
+            for s in log.snapshots[20:34]
+        ]
     (OUT / "horizon_frames.json").write_text(
         json.dumps(horizon_frames, indent=2),
         encoding="utf-8",

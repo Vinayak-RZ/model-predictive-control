@@ -23,21 +23,22 @@ def downsample(obj: dict, step: int = 2) -> dict:
 
 
 def main() -> None:
+    pw = json.loads((DATA / "power_limits.json").read_text(encoding="utf-8"))
     sp = json.loads((DATA / "setpoint_jump.json").read_text(encoding="utf-8"))
-    dist = json.loads((DATA / "disturbance_race.json").read_text(encoding="utf-8"))
     score = json.loads((DATA / "scorecard.json").read_text(encoding="utf-8"))
     horizon = json.loads((DATA / "horizon_frames.json").read_text(encoding="utf-8"))
     bundle = {
+        "power": {
+            "mpc": downsample(pw["mpc"]),
+            "pid": downsample(pw["pid"]),
+            "optimized_pid": downsample(pw["optimized_pid"]),
+            "limits": pw["limits"],
+            "violation_times_s": pw.get("violation_times_s", {}),
+        },
         "setpoint": {
             "mpc": downsample(sp["mpc"]),
             "pid": downsample(sp["pid"]),
             "optimized_pid": downsample(sp["optimized_pid"]),
-            "limits": sp["limits"],
-        },
-        "disturbance": {
-            "mpc": downsample(dist["mpc"]),
-            "pid": downsample(dist["pid"]),
-            "optimized_pid": downsample(dist["optimized_pid"]),
         },
         "scorecard": score,
         "horizon": horizon,
