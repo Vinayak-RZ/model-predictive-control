@@ -41,7 +41,7 @@ def _ref_step_90_115(time_s: np.ndarray) -> np.ndarray:
 
 def _ref_aggressive_high(time_s: np.ndarray) -> np.ndarray:
     ref = np.full_like(time_s, 85.0, dtype=float)
-    ref[time_s >= 15.0] = 165.0
+    ref[time_s >= 15.0] = 155.0
     return ref
 
 
@@ -80,15 +80,15 @@ def build_scenarios(cfg: DemoConfig | None = None) -> dict[str, ScenarioConfig]:
             key="power_constraints",
             title="Power limits and rate constraints",
             description=(
-                "Tight power cap (150 kW) and 8 kW/s move limit while requesting "
-                "165 °C. MPC anticipates the ceiling; PID often saturates and "
-                "overshoots when limits bind."
+                "Tight power cap (140 kW) and 6 kW/s move limit while requesting "
+                "155 °C. MPC anticipates the ceiling; PID (and frozen Opt. PID) "
+                "often break the slew when the rate limit is not enforced in the loop."
             ),
             duration_s=200,
             t_initial_c=85.0,
             u_initial_kw=100.0,
             y_ref_fn=_ref_aggressive_high,
-            limits_override=(0.0, 150.0, 8.0),
+            limits_override=(0.0, 140.0, 6.0),
             pid_gains=(4.5, 0.08, 0.0),
             mpc_horizon=30,
             pid_enforce_rate_limit=False,

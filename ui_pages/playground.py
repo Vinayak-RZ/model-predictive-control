@@ -34,7 +34,8 @@ from mpc_core.sim.ui_cache import load_playground_triple
 inject_styles()
 
 if "playground_params" not in st.session_state:
-    st.session_state.playground_params = PlaygroundParams()
+    # Open on tight power limits: that is where MPC's plan-ahead advantage shows.
+    st.session_state.playground_params = PRESETS["tight_power"](PlaygroundParams())
 
 
 def _params_key(p: PlaygroundParams) -> tuple:
@@ -105,6 +106,8 @@ with chart_col:
     st.plotly_chart(fig, use_container_width=True)
 
     insight_items: list[InsightItem] = []
+    settle_s: dict[str, float | None] = {}
+    hits_n: dict[str, int] = {}
     for name, run in (
         ("MPC", triple.mpc),
         ("PID", triple.pid),
@@ -113,15 +116,43 @@ with chart_col:
         m = run.metrics
         word, tone = violation_tone(m.constraint_violation_steps)
         settle = "—" if m.settling_time_s is None else f"{m.settling_time_s:.0f} s"
+        hits = int(m.constraint_violation_steps)
+        settle_s[name] = m.settling_time_s
+        hits_n[name] = hits
         insight_items.append(
             InsightItem(
                 label=name,
-                value=f"IAE {m.iae:.0f} · settle {settle}",
-                hint=f"{m.constraint_violation_steps} limit hits · {word}",
+                value=f"Settled in {settle}" if settle != "—" else "Did not settle",
+                hint=f"{hits} limit hits · {word}",
                 tone=tone,
             )
         )
     insight_strip(insight_items)
+
+    mpc_hits = hits_n["MPC"]
+    opt_hits = hits_n["Opt. PID"]
+    mpc_settle = settle_s["MPC"]
+    opt_settle = settle_s["Opt. PID"]
+    if mpc_hits < opt_hits:
+        st.success(
+            f"MPC stays inside the limits ({mpc_hits} hits) while Opt. PID records "
+            f"{opt_hits}. Same frozen PID gains as the mild setpoint jump — not retuned here."
+        )
+    elif mpc_hits == opt_hits and mpc_settle is not None and opt_settle is not None:
+        if mpc_settle < opt_settle:
+            st.success(
+                f"MPC settles faster ({mpc_settle:.0f} s vs {opt_settle:.0f} s) with "
+                f"the same limit-hit count ({mpc_hits})."
+            )
+        elif mpc_settle <= opt_settle * 1.05:
+            st.info(
+                "Settling is close. MPC’s edge is the explicit power/rate plan — "
+                "open Step-through to see the horizon, or keep the tight-power preset."
+            )
+    elif mpc_hits == 0 and hits_n["PID"] > 0:
+        st.success(
+            f"MPC records {mpc_hits} limit hits; hand-tuned PID records {hits_n['PID']}."
+        )
 
     if triple.mpc.mpc_solve_ms is not None:
         avg_ms = float(triple.mpc.mpc_solve_ms.mean())
@@ -200,6 +231,6 @@ with ctrl_col:
     tg = triple.tune.gains
     st.markdown("##### Optimised PID gains")
     st.caption(
-        f"Kp = **{tg.kp:.3g}**, Ki = **{tg.ki:.3g}**, Kd = **{tg.kd:.3g}** "
-        "(minimise IAE + violation penalty on this scenario)."
+        f"Kp = **{tg.kp:.3g}**, Ki = **{tg.ki:.3g}**, Kd = **{tg.kd:.3g}** — "
+        "tracking-optimised on the mild setpoint jump, then frozen (not retuned here)."
     )

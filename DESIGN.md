@@ -224,7 +224,7 @@ Depth is tonal. Surfaces step from canvas to white to subtle gray. Sections have
 
 ### Insight strip / metrics
 
-- Compact row under the main chart: IAE, settling, violations per controller.
+- Compact row under the main chart: settling and limit hits per controller (no IAE).
 - Violations use warning or critical with the words **feasible** or **violated** (never color alone).
 
 ## 7. Information architecture

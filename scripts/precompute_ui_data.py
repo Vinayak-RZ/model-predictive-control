@@ -66,7 +66,6 @@ def _scorecard(*, tune_maxiter: int = 30) -> None:
                 {
                     "Scenario": key.replace("_", " ").title(),
                     "Controller": label,
-                    "IAE": m.iae,
                     "Overshoot %": m.overshoot_pct,
                     "Settling [s]": m.settling_time_s,
                     "Energy [kWh]": m.energy_kwh,

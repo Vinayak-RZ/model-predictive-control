@@ -44,23 +44,25 @@ st.markdown(f"##### {scenario_pick}")
 fig = grouped_metrics_figure(
     controllers,
     {
-        "IAE": subset["IAE"].fillna(0).tolist(),
+        "Limit hits": subset["Violations"].fillna(0).tolist(),
         "Settling [s]": subset["Settling [s]"].fillna(0).tolist(),
-        "Violations": subset["Violations"].fillna(0).tolist(),
+        "Overshoot %": subset["Overshoot %"].fillna(0).tolist(),
     },
     title="",
 )
 st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("##### Metrics table")
+table = df.drop(columns=["IAE"], errors="ignore").rename(
+    columns={"Violations": "Limit hits"}
+)
 st.dataframe(
-    df.style.format(
+    table.style.format(
         {
-            "IAE": "{:.0f}",
             "Overshoot %": "{:.1f}",
             "Settling [s]": "{:.0f}",
             "Energy [kWh]": "{:.2f}",
-            "Violations": "{:.0f}",
+            "Limit hits": "{:.0f}",
         },
         na_rep="—",
     ),

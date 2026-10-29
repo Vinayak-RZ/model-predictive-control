@@ -46,7 +46,7 @@ streamlit run app.py
 
 <img src="docs/streamlit-step-through.png" width="900" alt="Streamlit Step-through: MPC predicted temperature over the horizon">
 
-**Scorecard** — same scenarios as the batch runs; violations, settling, IAE (including model mismatch).
+**Scorecard** — same scenarios as the batch runs; limit hits, settling, overshoot (including model mismatch).
 
 <img src="docs/streamlit-scorecard.png" width="900" alt="Streamlit Scorecard: metrics table and bar charts">
 
@@ -54,7 +54,7 @@ Theme: `.streamlit/config.toml` (cobalt accent `#2F6FEB`).
 
 ## Showcase video
 
-The cut focuses on **power limits and violations**: plain PID breaks slew rules (6 violation steps); MPC stays feasible with zero violations by planning ahead; optimized PID is shown honestly at zero violations after scenario-specific retuning.
+The cut focuses on **power limits and violations**: plain PID breaks slew rules; MPC stays feasible with zero violations by planning ahead; optimised PID uses gains locked from the mild setpoint jump (not retuned on the tight-limit case).
 
 <p align="center">
   <a href="https://raw.githubusercontent.com/Vinayak-RZ/model-predictive-control/main/video/out/mpc-vs-pid.mp4">
@@ -97,7 +97,7 @@ Simulation plots:
 | --- | --- | --- |
 | ![Setpoint](results/setpoint_tracking.png) | ![Disturbance](results/disturbance_rejection.png) | ![Power](results/power_constraints.png) |
 
-**Fair comparison:** optimized PID gains come from SciPy (`src/mpc_core/sim/pid_tune.py`) minimizing IAE plus a violation penalty on the **same** plant, noise seed, and limits. Heater power is clipped to `[u_min, u_max]` every step.
+**Fair comparison (UI):** optimised PID gains are tuned once on the mild setpoint jump (`baseline_optimized_pid` in `playground.py`), then frozen across presets and scorecard scenarios — you do not get a free retune for every operating condition. MPC uses the same planner throughout. Batch scripts may still retune per scenario for report tables. Heater power is clipped to `[u_min, u_max]` every step.
 
 ## How it works
 

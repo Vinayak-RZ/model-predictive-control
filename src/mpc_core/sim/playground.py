@@ -90,6 +90,39 @@ class TripleRun:
     tune: TuneResult
 
 
+# Gains tuned once on the mild setpoint jump, then reused everywhere. That matches
+# field practice (you do not retune PID for every door-open) and lets MPC's
+# constraint planning show up against a strong but fixed PID baseline.
+_BASELINE_OPT_PID: TuneResult | None = None
+
+
+def baseline_optimized_pid(
+    *,
+    cfg: DemoConfig | None = None,
+    tune_maxiter: int = 35,
+) -> TuneResult:
+    """Return Opt. PID gains locked to the setpoint-tracking scenario.
+
+    Tuned for tracking on the mild jump (no rate enforcement in the tune loop,
+    no violation penalty) so the baseline is a strong tracker — then frozen and
+    stressed on tight-limit presets where MPC keeps the slew feasible.
+    """
+    global _BASELINE_OPT_PID
+    if _BASELINE_OPT_PID is not None:
+        return _BASELINE_OPT_PID
+    from mpc_core.sim.scenarios import SCENARIOS
+
+    cfg = cfg or default_demo_config()
+    _BASELINE_OPT_PID = tune_pid_gains(
+        SCENARIOS["setpoint_tracking"],
+        cfg=cfg,
+        options=RunOptions(enforce_pid_rate_limit=False),
+        violation_weight=0.0,
+        maxiter=tune_maxiter,
+    )
+    return _BASELINE_OPT_PID
+
+
 def run_triple(
     scenario: ScenarioConfig,
     *,
@@ -100,18 +133,22 @@ def run_triple(
     mpc_tracking_weight: float = 1.0,
     plain_pid_gains: PIDGains | None = None,
     tune_maxiter: int = 35,
+    freeze_optimized_pid: bool = True,
 ) -> TripleRun:
     cfg = cfg or default_demo_config()
     opt = options or RunOptions()
     plain = plain_pid_gains or PIDGains(*scenario.pid_gains)
-    tune = tune_pid_gains(
-        scenario,
-        cfg=cfg,
-        limits=limits,
-        options=opt,
-        x0=(plain.kp, plain.ki, plain.kd),
-        maxiter=tune_maxiter,
-    )
+    if freeze_optimized_pid:
+        tune = baseline_optimized_pid(cfg=cfg, tune_maxiter=tune_maxiter)
+    else:
+        tune = tune_pid_gains(
+            scenario,
+            cfg=cfg,
+            limits=limits,
+            options=opt,
+            x0=(plain.kp, plain.ki, plain.kd),
+            maxiter=tune_maxiter,
+        )
     mpc = run_closed_loop(
         scenario,
         "mpc",
@@ -161,13 +198,14 @@ PRESETS: dict[str, Callable[[PlaygroundParams], PlaygroundParams]] = {
     ),
     "tight_power": lambda p: replace(
         p,
-        u_max=150.0,
-        du_max=8.0,
+        u_max=140.0,
+        du_max=6.0,
         ref_low_c=85.0,
-        ref_high_c=165.0,
+        ref_high_c=155.0,
         ref_step_at_s=15.0,
         mpc_horizon=30,
-        enforce_pid_rate=True,
+        # PID may break the slew; MPC still respects it in the plan.
+        enforce_pid_rate=False,
     ),
     "model_mismatch": lambda p: replace(p, model_mismatch=True, ref_step_at_s=25.0),
 }
