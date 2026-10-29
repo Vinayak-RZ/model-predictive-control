@@ -252,6 +252,18 @@ div[data-testid="stMetric"] {{
   border-radius: 6px;
   padding: 12px 14px;
 }}
+
+/* Diagram sits on canvas without a card edge */
+div[data-testid="stImage"],
+div[data-testid="stImageContainer"] {{
+  background: {CANVAS} !important;
+  box-shadow: none !important;
+  border: none !important;
+}}
+div[data-testid="stImage"] img,
+div[data-testid="stImageContainer"] img {{
+  background: {CANVAS} !important;
+}}
 </style>
 """,
         unsafe_allow_html=True,
