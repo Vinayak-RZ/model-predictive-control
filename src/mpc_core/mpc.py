@@ -87,6 +87,7 @@ def solve(
     horizon_steps: int,
     time_limit_s: float,
     state: MpcState,
+    tracking_weight: float = 1.0,
 ) -> MpcResult:
     """SISO offset-free QP over ``horizon_steps``; returns the first-move proposal."""
     if horizon_steps < 1:
@@ -112,7 +113,7 @@ def solve(
         u = float(x[0])
         u_seq = np.full(horizon_steps, u, dtype=np.float64)
         ys = _simulate(model, y_meas, st.d_hat, u_seq)
-        return float(np.sum((ys - y_ref) ** 2))
+        return tracking_weight * float(np.sum((ys - y_ref) ** 2))
 
     x0 = np.array([float(np.clip(u0, lo, hi))], dtype=np.float64)
     res = minimize(f, x0, method="L-BFGS-B", bounds=[(lo, hi)])
