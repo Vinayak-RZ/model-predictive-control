@@ -27,10 +27,11 @@ Additional coursework layers:
 
 | Component | Path | Role |
 | --- | --- | --- |
-| Simulation library | `src/mpc_core/sim/` | Closed-loop runs, metrics, plots |
+| Simulation library | `src/mpc_core/sim/` | Closed-loop runs, metrics, plots, PID tuning |
 | Batch runner | `examples/run_simulations.py` | PNG figures under `results/` |
-| Interactive UI | `app.py` | Streamlit MPC vs PID explorer |
-| Tests | `tests/test_simulation.py` | Regression checks on simulations |
+| Interactive UI | `app.py` + `pages/` | Streamlit Playground, Step-through, Scorecard |
+| Showcase video | `video/` | HyperFrames MP4 from simulation JSON |
+| Tests | `tests/` | Simulation + PID tuner regression checks |
 
 Third-party references and licences are listed in `CREDITS.md`.
 
@@ -58,7 +59,9 @@ disturbances the controller can reject faster.
 - Sample time: **1 s** · Simulation horizon: **180–200 s** per scenario
 - Actuator: coil power **0–250 kW** (tighter in the constraint case)
 - MPC horizon: **25 steps** (30 in the power-limit scenario)
-- PID: position-form with anti-windup; gains per scenario (see `sim/scenarios.py`)
+- PID: position-form with anti-windup; hand-tuned gains per scenario (`sim/scenarios.py`)
+- **Optimized PID:** SciPy L-BFGS-B tuning on the same plant, noise seed, and limits,
+  minimizing IAE plus a penalty on constraint violations (`sim/pid_tune.py`)
 - Metrics: **IAE**, **ISE**, **overshoot**, **settling time** (±3% band),
   **constraint violation steps**, **energy** (∫P dt)
 
@@ -70,16 +73,17 @@ Setpoint steps **80 °C → 120 °C** at 30 s.
 
 ![Setpoint tracking](../results/setpoint_tracking.png)
 
-| Metric | MPC | PID |
-| --- | --- | --- |
-| IAE | 1.82×10³ | 2.48×10³ |
-| ISE | 4.30×10⁴ | 5.41×10⁴ |
-| Overshoot | 2.8% | 0% |
-| Settling time | **101 s** | 179 s |
-| Violations | 0 | 0 |
+| Metric | MPC | PID | Optimized PID |
+| --- | --- | --- | --- |
+| IAE | 1.82×10³ | 2.48×10³ | 1.47×10³ |
+| ISE | 4.30×10⁴ | 5.41×10⁴ | 3.38×10⁴ |
+| Overshoot | 2.8% | 0% | 0.3% |
+| Settling time | **101 s** | 179 s | 99 s |
+| Violations | 0 | 0 | 0 |
 
-MPC reaches the band sooner with lower integrated error; it trades a small
-overshoot for faster tracking.
+MPC reaches the band much sooner than hand-tuned PID. **Optimized PID** (retuned on
+this exact scenario) can slightly beat MPC on integrated error here, but it still
+has no preview — gains must be re-found for each operating regime.
 
 ### 3.2 Disturbance rejection
 
@@ -88,13 +92,15 @@ After a setpoint step to **115 °C**, effective heat loss **U increases 45%** at
 
 ![Disturbance rejection](../results/disturbance_rejection.png)
 
-| Metric | MPC | PID |
-| --- | --- | --- |
-| IAE | **955** | 1090 |
-| ISE | **1.08×10⁴** | 1.36×10⁴ |
-| Settling time | **62 s** | 103 s |
+| Metric | MPC | PID | Optimized PID |
+| --- | --- | --- | --- |
+| IAE | **955** | 1090 | 586 |
+| ISE | **1.08×10⁴** | 1.36×10⁴ | 7.75×10³ |
+| Settling time | 62 s | 103 s | **60 s** |
 
-Innovation updates to `d_hat` let MPC recover faster after the unmodelled load change.
+Innovation updates to `d_hat` help MPC, but **offline-optimized PID** can still
+win on IAE when tuned on the same disturbance scenario. The trade-off is retuning
+cost vs one MPC policy with preview.
 
 ### 3.3 Power limits and rate constraints
 
@@ -104,28 +110,38 @@ field retrofit) to show the cost of ignoring slew.
 
 ![Power constraints](../results/power_constraints.png)
 
-| Metric | MPC | PID |
-| --- | --- | --- |
-| IAE | 9.48×10³ | 9.15×10³ |
-| Violations | **0** | **6** steps |
-| Energy | 7.75 kWh | 7.99 kWh |
+| Metric | MPC | PID | Optimized PID |
+| --- | --- | --- | --- |
+| IAE | 9.48×10³ | 9.15×10³* | 9.03×10³ |
+| Violations | **0** | **6** steps | **0** |
+| Energy | 7.75 kWh | 7.99 kWh | 8.07 kWh |
 
-PID achieves slightly lower IAE only by **breaking the slew limit** six times.
-MPC stays feasible; integrated error is similar but operation respects actuator
-limits—often the real requirement in industrial power electronics.
+\*Hand-tuned PID achieves slightly lower IAE only by **breaking the slew limit** six times
+(rate limiting disabled for that baseline). MPC and optimized PID stay feasible.
+
+### 3.4 Model mismatch
+
+Same setpoint test as §3.1 but the **plant** parameters differ from the model MPC uses
+(+8% mass, −6% efficiency, +18% heat loss).
+
+| Metric | MPC | PID | Optimized PID |
+| --- | --- | --- | --- |
+| IAE | 2009 | 2541 | 1667 |
+| Settling time | **111 s** | 167 s | 109 s |
+
+MPC’s advantage vs plain PID shrinks when the model is wrong; optimized PID again
+narrows the gap by scenario-specific tuning.
 
 ---
 
-## 4. MPC vs PID — advantages and limitations
+## 4. MPC vs PID vs optimized PID
 
-| Topic | MPC (this extract) | PID |
-| --- | --- | --- |
-| Preview | Uses horizon rollout | None |
-| Constraints | Box + slew in QP | Requires ad-hoc clamping |
-| Tuning | Horizon, model fit | Kp, Ki, Kd |
-| Compute | Small NLP each second | Negligible |
-| Model | Needs identified `a,b` | Only gain tuning |
-| Offset-free | Built-in `d_hat` | Integrator only |
+| Topic | MPC | Hand-tuned PID | Optimized PID |
+| --- | --- | --- | --- |
+| Preview | Horizon rollout | None | None |
+| Constraints | In QP | Clamping / optional rate | Clamping + tuned for penalties |
+| Tuning effort | Horizon, model | Kp, Ki, Kd | Nonlinear optimization per scenario |
+| Compute | Small NLP each second | Negligible | Offline tuning + negligible online |
 
 **Limitations here:** single held move (not full move blocking), linear prediction
 vs nonlinear plant, no state constraints on temperature—only on power. A production
@@ -136,13 +152,13 @@ deployment would add move penalties, MIMO coupling, and model validation gates
 
 ## 5. Conclusion
 
-On this heater model, offset-free MPC improves **setpoint tracking** and
-**disturbance rejection** metrics while respecting **power limits** without
-constraint violations. PID remains valuable as a baseline: lower implementation
-cost and competitive energy use when limits are loose, but it falls behind when
-load changes or when slew limits must be honoured in the controller itself.
+On this heater model, offset-free MPC improves **setpoint tracking** vs hand-tuned PID
+and avoids **power violations** where the PID baseline ignores slew. **Optimized PID**
+is an honest strong baseline: it often beats MPC on raw IAE when retuned on the same
+scenario, but it does not plan ahead and still requires offline optimization per case.
 
-Interactive exploration: `streamlit run app.py`.
+Interactive exploration: `streamlit run app.py` (Playground, Step-through, Scorecard).
+Showcase video: `video/out/mpc-vs-pid.mp4`.
 
 ---
 
