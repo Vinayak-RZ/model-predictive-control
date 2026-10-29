@@ -34,23 +34,53 @@ streamlit run app.py
 
 ## Interactive app
 
-**Overview** — MPC vs PID on the same heater model, with a block diagram of the predictive loop.
+Theme: `.streamlit/config.toml` (cobalt accent `#2F6FEB`). Regen shots with the app running: `python scripts/capture_streamlit_screenshots.py`.
 
-<img src="docs/streamlit-overview.png" width="900" alt="Streamlit Overview: MPC Heater Lab landing page with MPC block diagram">
+### Overview
 
-**Playground** — compare MPC, PID, and optimised PID on one chart; presets load from disk.
+MPC vs PID on the same heater model, with a block diagram of the predictive loop.
 
-<img src="docs/streamlit-playground.png" width="900" alt="Streamlit Playground: temperature and heater power traces for MPC, PID, and optimised PID">
+<p align="center">
+  <img src="docs/streamlit-overview.png" width="920" alt="Streamlit Overview: MPC Heater Lab landing page with MPC block diagram">
+</p>
 
-**Step-through** — walk one MPC horizon at a time.
+### Playground
 
-<img src="docs/streamlit-step-through.png" width="900" alt="Streamlit Step-through: MPC predicted temperature over the horizon">
+Compare MPC, PID, and optimised PID on one chart. Presets load from disk. Cold open is the tight-power case.
 
-**Scorecard** — same scenarios as the batch runs; limit hits, settling, overshoot (including model mismatch).
+<p align="center">
+  <img src="docs/streamlit-playground.png" width="920" alt="Streamlit Playground default: tight power limits">
+</p>
 
-<img src="docs/streamlit-scorecard.png" width="900" alt="Streamlit Scorecard: metrics table and bar charts">
+#### Playground presets
 
-Theme: `.streamlit/config.toml` (cobalt accent `#2F6FEB`).
+| Setpoint jump | Cold-door disturbance |
+| :---: | :---: |
+| <img src="docs/streamlit-playground-setpoint.png" width="440" alt="Playground setpoint jump"> | <img src="docs/streamlit-playground-cold-door.png" width="440" alt="Playground cold-door ambient step"> |
+
+| Heat-loss bump + sensor noise | Tight power / rate limits |
+| :---: | :---: |
+| <img src="docs/streamlit-playground-heat-loss-noise.png" width="440" alt="Playground heat-loss bump with sensor noise"> | <img src="docs/streamlit-playground-tight-power.png" width="440" alt="Playground tight power and rate limits"> |
+
+| Soft limits + retuned hand PID | Model mismatch |
+| :---: | :---: |
+| <img src="docs/streamlit-playground-soft-limits.png" width="440" alt="Playground soft limits and different controller knobs"> | <img src="docs/streamlit-playground-mismatch.png" width="440" alt="Playground plant/model mismatch"> |
+
+### Step-through
+
+Walk one MPC horizon at a time.
+
+<p align="center">
+  <img src="docs/streamlit-step-through.png" width="920" alt="Streamlit Step-through: MPC predicted temperature over the horizon">
+</p>
+
+### Scorecard
+
+Same scenarios as the batch runs: limit hits, settling, overshoot (including model mismatch).
+
+<p align="center">
+  <img src="docs/streamlit-scorecard.png" width="920" alt="Streamlit Scorecard: metrics table and bar charts">
+</p>
 
 ## Showcase video
 

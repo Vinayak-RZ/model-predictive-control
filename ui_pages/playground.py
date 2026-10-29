@@ -38,7 +38,6 @@ if "playground_params" not in st.session_state:
     # Open on tight power limits: that is where MPC's plan-ahead advantage shows.
     st.session_state.playground_params = PRESETS["tight_power"](PlaygroundParams())
 
-
 def _params_key(p: PlaygroundParams) -> tuple:
     return tuple(sorted(p.__dict__.items()))
 
@@ -75,23 +74,35 @@ page_header(title=PLAYGROUND_TITLE, look_for=PLAYGROUND_LEDE)
 controller_legend()
 
 st.markdown("##### Presets")
-pcols = st.columns(5)
 preset_actions = [
     ("Setpoint jump", "setpoint_jump"),
-    ("Cold-door disturbance", "cold_door"),
-    ("Tight power limit", "tight_power"),
+    ("Cold-door", "cold_door"),
+    ("Heat-loss + noise", "heat_loss_noise"),
+    ("Tight power", "tight_power"),
+    ("Soft limits", "soft_limits"),
     ("Model mismatch", "model_mismatch"),
 ]
+pcols = st.columns(len(preset_actions) + 1)
 for col, (label, key) in zip(pcols, preset_actions):
     if col.button(label, use_container_width=True):
-        st.session_state.playground_params = PRESETS[key](st.session_state.playground_params)
+        # Always start from defaults so presets do not stack on the previous case.
+        st.session_state.playground_params = PRESETS[key](PlaygroundParams())
+        st.session_state._loaded_preset = key
         st.rerun()
-if pcols[4].button("Reset defaults", type="secondary", use_container_width=True):
+if pcols[-1].button("Reset", type="secondary", use_container_width=True):
     st.session_state.playground_params = PlaygroundParams()
+    st.session_state._loaded_preset = "default"
     st.rerun()
 
 params: PlaygroundParams = st.session_state.playground_params
 triple = resolve_triple(params)
+
+st.caption(
+    f"Active: {params.ref_low_c:.0f}→{params.ref_high_c:.0f} °C at {params.ref_step_at_s:.0f} s · "
+    f"noise σ={params.noise_std_c:.2f} · u_max={params.u_max:.0f} kW · Δu={params.du_max:.0f} · "
+    f"disturbance={params.disturbance_event or 'none'}"
+    + (" · mismatch on" if params.model_mismatch else "")
+)
 
 chart_col, ctrl_col = st.columns([2.2, 1], gap="large")
 
@@ -167,16 +178,25 @@ with chart_col:
 with ctrl_col:
     with st.form("sliders", border=False):
         p: PlaygroundParams = st.session_state.playground_params
+        # Remount widgets when the preset changes so slider defaults match the case.
+        pk = str(st.session_state.get("_loaded_preset", "default"))
 
         with st.expander("Scenario", expanded=True):
-            ref_high = st.slider("Setpoint high [°C]", 70.0, 180.0, float(p.ref_high_c))
-            ref_low = st.slider("Setpoint low [°C]", 60.0, 160.0, float(p.ref_low_c))
-            step_at = st.slider("Setpoint step at [s]", 5.0, 120.0, float(p.ref_step_at_s))
+            ref_high = st.slider(
+                "Setpoint high [°C]", 70.0, 180.0, float(p.ref_high_c), key=f"ref_high_{pk}"
+            )
+            ref_low = st.slider(
+                "Setpoint low [°C]", 60.0, 160.0, float(p.ref_low_c), key=f"ref_low_{pk}"
+            )
+            step_at = st.slider(
+                "Setpoint step at [s]", 5.0, 120.0, float(p.ref_step_at_s), key=f"step_{pk}"
+            )
             dist_at = st.slider(
                 "Disturbance time [s] (0 = none)",
                 0.0,
                 float(p.duration_s),
                 float(p.disturbance_at_s or 0.0),
+                key=f"dist_at_{pk}",
             )
             dist_kind = st.selectbox(
                 "Disturbance",
@@ -184,21 +204,37 @@ with ctrl_col:
                 index=0
                 if not p.disturbance_event
                 else (1 if p.disturbance_event == "ambient_step" else 2),
+                key=f"dist_kind_{pk}",
             )
-            noise = st.slider("Sensor noise σ [°C]", 0.0, 2.0, float(p.noise_std_c), 0.05)
-            mismatch = st.checkbox("Plant/model mismatch", value=p.model_mismatch)
+            noise = st.slider(
+                "Sensor noise σ [°C]", 0.0, 2.0, float(p.noise_std_c), 0.05, key=f"noise_{pk}"
+            )
+            mismatch = st.checkbox(
+                "Plant/model mismatch", value=p.model_mismatch, key=f"mismatch_{pk}"
+            )
 
         with st.expander("Limits", expanded=False):
-            u_max = st.slider("Power max [kW]", 50.0, 280.0, float(p.u_max))
-            du_max = st.slider("Max power step [kW/s]", 2.0, 40.0, float(p.du_max))
+            u_max = st.slider(
+                "Power max [kW]", 50.0, 280.0, float(p.u_max), key=f"umax_{pk}"
+            )
+            du_max = st.slider(
+                "Max power step [kW/s]", 2.0, 40.0, float(p.du_max), key=f"dumax_{pk}"
+            )
 
         with st.expander("Controllers", expanded=False):
-            kp = st.slider("PID Kp", 0.1, 10.0, float(p.pid_kp), 0.1)
-            ki = st.slider("PID Ki", 0.0, 0.3, float(p.pid_ki), 0.005)
-            kd = st.slider("PID Kd", 0.0, 5.0, float(p.pid_kd), 0.1)
-            horizon = st.slider("MPC horizon [steps]", 5, 40, int(p.mpc_horizon))
+            kp = st.slider("PID Kp", 0.1, 10.0, float(p.pid_kp), 0.1, key=f"kp_{pk}")
+            ki = st.slider("PID Ki", 0.0, 0.3, float(p.pid_ki), 0.005, key=f"ki_{pk}")
+            kd = st.slider("PID Kd", 0.0, 5.0, float(p.pid_kd), 0.1, key=f"kd_{pk}")
+            horizon = st.slider(
+                "MPC horizon [steps]", 5, 40, int(p.mpc_horizon), key=f"hor_{pk}"
+            )
             q_weight = st.slider(
-                "MPC tracking weight", 0.2, 5.0, float(p.mpc_tracking_weight), 0.1
+                "MPC tracking weight",
+                0.2,
+                5.0,
+                float(p.mpc_tracking_weight),
+                0.1,
+                key=f"qw_{pk}",
             )
 
         submitted = st.form_submit_button(
