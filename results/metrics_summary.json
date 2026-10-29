@@ -15,6 +15,19 @@
       "settling_time_s": 179.0,
       "constraint_violation_steps": 0,
       "energy_kwh": 4.882318560184072
+    },
+    "optimized_pid": {
+      "iae": 1466.416576856722,
+      "ise": 33836.921792749476,
+      "overshoot_pct": 0.28606353182650446,
+      "settling_time_s": 99.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 5.419554814358623
+    },
+    "optimized_pid_gains": {
+      "kp": 0.657261661628341,
+      "ki": 0.014324983607382383,
+      "kd": 4.540791857929044e-07
     }
   },
   "disturbance_rejection": {
@@ -33,6 +46,19 @@
       "settling_time_s": 103.0,
       "constraint_violation_steps": 0,
       "energy_kwh": 3.558647442579107
+    },
+    "optimized_pid": {
+      "iae": 585.7930293695631,
+      "ise": 7746.167981686413,
+      "overshoot_pct": 0.36755054346288135,
+      "settling_time_s": 60.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 3.6072544451168373
+    },
+    "optimized_pid_gains": {
+      "kp": 1.141206723887131,
+      "ki": 0.03346878163509304,
+      "kd": 0.17376049620586614
     }
   },
   "power_constraints": {
@@ -51,6 +77,50 @@
       "settling_time_s": 199.0,
       "constraint_violation_steps": 6,
       "energy_kwh": 7.985763308948222
+    },
+    "optimized_pid": {
+      "iae": 9032.603246382894,
+      "ise": 489472.05569184513,
+      "overshoot_pct": 0.0,
+      "settling_time_s": 199.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 8.073318328502369
+    },
+    "optimized_pid_gains": {
+      "kp": 0.08184810215372447,
+      "ki": 0.0,
+      "kd": 0.02132090520751429
+    }
+  },
+  "model_mismatch": {
+    "mpc": {
+      "iae": 2009.0488586178149,
+      "ise": 48622.77772242376,
+      "overshoot_pct": 2.885450541648057,
+      "settling_time_s": 111.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 6.699708905338507
+    },
+    "pid": {
+      "iae": 2541.178920880652,
+      "ise": 56591.54745534186,
+      "overshoot_pct": 0.0,
+      "settling_time_s": 167.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 5.781644166181909
+    },
+    "optimized_pid": {
+      "iae": 1666.6483783823721,
+      "ise": 39172.97315308075,
+      "overshoot_pct": 0.2432372511869474,
+      "settling_time_s": 109.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 6.236323710793733
+    },
+    "optimized_pid_gains": {
+      "kp": 0.6684617863226037,
+      "ki": 0.013678334405339282,
+      "kd": 7.299804604346114e-07
     }
   }
 }

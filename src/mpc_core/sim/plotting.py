@@ -26,6 +26,36 @@ def apply_plot_style() -> None:
     )
 
 
+def save_triple_figure(
+    *,
+    title: str,
+    mpc: SimulationResult,
+    pid: SimulationResult,
+    optimized_pid: SimulationResult,
+    path: Path,
+) -> None:
+    apply_plot_style()
+    fig, axes = plt.subplots(2, 1, sharex=True, figsize=(10, 6.5), constrained_layout=True)
+    axes[0].plot(mpc.time_s, mpc.y_ref, "k--", label="Setpoint", alpha=0.7)
+    axes[0].plot(mpc.time_s, mpc.y_c, label="MPC", color="#2563eb")
+    axes[0].plot(pid.time_s, pid.y_c, label="PID", color="#71717a")
+    axes[0].plot(optimized_pid.time_s, optimized_pid.y_c, label="Opt. PID", color="#0d9488")
+    axes[0].set_ylabel("Temperature [°C]")
+    axes[0].legend(loc="best")
+    axes[0].set_title(title)
+
+    axes[1].plot(mpc.time_s, mpc.u_kw, label="MPC", color="#2563eb")
+    axes[1].plot(pid.time_s, pid.u_kw, label="PID", color="#71717a")
+    axes[1].plot(optimized_pid.time_s, optimized_pid.u_kw, label="Opt. PID", color="#0d9488")
+    axes[1].set_ylabel("Coil power [kW]")
+    axes[1].set_xlabel("Time [s]")
+    axes[1].legend(loc="best")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+
+
 def save_comparison_figure(
     *,
     title: str,

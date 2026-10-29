@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="data_bundle.js"></script>
+    <style>
+      :root {
+        --ground: #ffffff;
+        --ink: #18181b;
+        --muted: #71717a;
+        --accent: #2563eb;
+        --pid: #71717a;
+        --opt: #0d9488;
+        --font: "Segoe UI", system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--ground);
+        font-family: var(--font);
+        color: var(--ink);
+      }
+      #stage {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        padding: 64px 88px;
+        opacity: 0;
+      }
+      h1 {
+        font-size: 68px;
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+      h2 {
+        font-size: 42px;
+        margin-bottom: 16px;
+      }
+      p.lead {
+        font-size: 30px;
+        color: var(--muted);
+        max-width: 1500px;
+        line-height: 1.35;
+      }
+      p.note {
+        font-size: 26px;
+        color: var(--muted);
+        margin-top: 16px;
+      }
+      canvas {
+        background: #fafafa;
+        border: 1px solid #e4e4e7;
+        border-radius: 12px;
+      }
+      .legend {
+        display: flex;
+        gap: 28px;
+        margin-top: 16px;
+        font-size: 24px;
+        flex-wrap: wrap;
+      }
+      .legend span::before {
+        content: "";
+        display: inline-block;
+        width: 26px;
+        height: 6px;
+        border-radius: 3px;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+      .legend .mpc::before {
+        background: var(--accent);
+      }
+      .legend .pid::before {
+        background: var(--pid);
+      }
+      .legend .opt::before {
+        background: var(--opt);
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 36px;
+        align-items: center;
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 10px 0;
+        font-size: 22px;
+      }
+      .bar-label {
+        width: 200px;
+      }
+      .bar-track {
+        flex: 1;
+        height: 32px;
+        background: #f4f4f5;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 6px;
+      }
+      .bar-val {
+        width: 80px;
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .score-block {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="stage"
+      data-composition-id="mpc-demo"
+      data-start="0"
+      data-duration="82"
+      data-width="1920"
+      data-height="1080"
+    >
+      <section class="scene" id="s-title">
+        <h1>Heater power limits</h1>
+        <p class="lead" style="margin-top: 28px">
+          When the coil hits a ceiling, plain PID can break slew rules. MPC keeps power feasible by planning ahead — no retuning per operating point.
+        </p>
+      </section>
+
+      <section class="scene" id="s-power">
+        <h2>Tight cap — coil power vs limit</h2>
+        <p class="note">Dashed line: 150 kW max · data from batch simulations</p>
+        <canvas id="cv-power" width="1744" height="500"></canvas>
+        <div class="legend">
+          <span class="mpc">MPC (0 violations)</span>
+          <span class="pid">PID (6 violations)</span>
+          <span class="opt">Optimized PID (0 — retuned for this case)</span>
+        </div>
+      </section>
+
+      <section class="scene" id="s-horizon">
+        <h2>MPC horizon sees the ceiling</h2>
+        <div class="grid2">
+          <canvas id="cv-horizon" width="900" height="480"></canvas>
+          <div>
+            <p class="lead">
+              Each solve rolls temperature forward and picks power inside the window. When the limit binds, MPC ramps early instead of slamming the actuator later.
+            </p>
+            <p class="note" id="horizon-note"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="scene" id="s-score">
+        <h2>Scorecard (same metrics as the app)</h2>
+        <div class="score-block">
+          <p class="lead">Power limits — constraint violations</p>
+          <div id="bars-viol"></div>
+        </div>
+        <div class="score-block">
+          <p class="lead">Setpoint tracking — settling time [s] vs plain PID</p>
+          <div id="bars-settle"></div>
+        </div>
+        <div class="score-block">
+          <p class="lead">Setpoint tracking — IAE (optimized PID can win here)</p>
+          <div id="bars-iae"></div>
+        </div>
+      </section>
+
+      <section class="scene" id="s-close">
+        <h2>Takeaway</h2>
+        <p class="lead">
+          MPC handles limits by design: preview, explicit constraints, zero violations without scenario-specific gain search. Optimized PID can match feasibility when retuned — but that is a new optimization job every time conditions change.
+        </p>
+      </section>
+    </div>
+    <script>
+      const D = window.MPC_DEMO_DATA;
+      const ACCENT = "#2563eb";
+      const PID = "#71717a";
+      const OPT = "#0d9488";
+
+      function drawPowerChart(canvas, progress) {
+        const series = D.power;
+        const uMax = series.limits.u_max;
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        const pad = 52;
+        const tMax = series.mpc.time_s[series.mpc.time_s.length - 1];
+        const tCut = tMax * progress;
+        const allU = [
+          ...series.mpc.u_kw,
+          ...series.pid.u_kw,
+          ...series.optimized_pid.u_kw,
+          uMax,
+        ];
+        const uMin = 0;
+        const uTop = Math.max(...allU) * 1.05;
+        const x = (t) => pad + (t / tMax) * (w - 2 * pad);
+        const y = (v) => h - pad - ((v - uMin) / (uTop - uMin)) * (h - 2 * pad);
+
+        ctx.strokeStyle = "#dc2626";
+        ctx.setLineDash([10, 8]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(pad, y(uMax));
+        ctx.lineTo(w - pad, y(uMax));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#71717a";
+        ctx.font = "22px sans-serif";
+        ctx.fillText(`${uMax} kW limit`, w - pad - 130, y(uMax) - 10);
+
+        function trace(key, color, width) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = width;
+          ctx.beginPath();
+          let started = false;
+          for (let i = 0; i < series[key].time_s.length; i++) {
+            const t = series[key].time_s[i];
+            if (t > tCut) break;
+            const px = x(t);
+            const py = y(series[key].u_kw[i]);
+            if (!started) {
+              ctx.moveTo(px, py);
+              started = true;
+            } else ctx.lineTo(px, py);
+          }
+          ctx.stroke();
+        }
+        trace("mpc", ACCENT, 4);
+        trace("pid", PID, 3);
+        trace("optimized_pid", OPT, 3);
+
+        const vtimes = series.violation_times_s?.pid || [];
+        ctx.fillStyle = "rgba(220, 38, 38, 0.35)";
+        vtimes.forEach((t) => {
+          if (t > tCut) return;
+          ctx.fillRect(x(t) - 3, pad, 6, h - 2 * pad);
+        });
+      }
+
+      function drawHorizon(canvas, frameIdx) {
+        const ctx = canvas.getContext("2d");
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+        const frames = D.horizon;
+        const f = frames[Math.min(Math.floor(frameIdx), frames.length - 1)];
+        document.getElementById("horizon-note").textContent =
+          `t = ${f.t0.toFixed(0)} s · planned power ${f.u.toFixed(1)} kW (cap ${f.u_max} kW)`;
+        const pad = 44;
+        const preds = f.predicted_y;
+        const t0 = f.t0;
+        const xs = preds.map((_, i) => t0 + i + 1);
+        const all = [f.y_meas, f.y_ref, ...preds];
+        const yMin = Math.min(...all) - 4;
+        const yMax = Math.max(...all) + 4;
+        const x = (t) => pad + ((t - t0) / (xs[xs.length - 1] - t0 + 1)) * (w - 2 * pad);
+        const y = (v) => h - pad - ((v - yMin) / (yMax - yMin)) * (h - 2 * pad);
+
+        ctx.strokeStyle = ACCENT;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x(t0), y(f.y_meas));
+        for (let i = 0; i < xs.length; i++) ctx.lineTo(x(xs[i]), y(preds[i]));
+        ctx.stroke();
+
+        ctx.fillStyle = ACCENT;
+        ctx.beginPath();
+        ctx.arc(x(t0), y(f.y_meas), 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = "#18181b";
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(pad, y(f.y_ref));
+        ctx.lineTo(w - pad, y(f.y_ref));
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const powerH = 70;
+        const barTop = h - pad - powerH;
+        ctx.fillStyle = "#f4f4f5";
+        ctx.fillRect(pad, barTop, w - 2 * pad, powerH);
+        const uFrac = Math.min(1, f.u / f.u_max);
+        ctx.fillStyle = ACCENT;
+        ctx.fillRect(pad, barTop, (w - 2 * pad) * uFrac, powerH);
+        ctx.strokeStyle = "#dc2626";
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(pad + (w - 2 * pad) * 0.98, barTop);
+        ctx.lineTo(pad + (w - 2 * pad), barTop + powerH);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#18181b";
+        ctx.font = "20px sans-serif";
+        ctx.fillText(`Planned power ${f.u.toFixed(0)} / ${f.u_max} kW`, pad, barTop - 8);
+      }
+
+      function buildBars(container, scenario, field, format) {
+        const rows = D.scorecard.filter((r) => r.scenario === scenario);
+        const max = Math.max(...rows.map((r) => r[field] || 0), 1);
+        container.innerHTML = "";
+        rows.forEach((r) => {
+          const color = r.controller === "MPC" ? ACCENT : r.controller === "PID" ? PID : OPT;
+          const val = r[field] ?? 0;
+          const row = document.createElement("div");
+          row.className = "bar-row";
+          row.innerHTML = `<div class="bar-label">${r.controller}</div><div class="bar-track"><div class="bar-fill" style="background:${color}"></div></div><div class="bar-val">${format(val)}</div>`;
+          container.appendChild(row);
+          row._target = (val / max) * 100;
+          row._fill = row.querySelector(".bar-fill");
+        });
+        return container.querySelectorAll(".bar-row");
+      }
+
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines = window.__timelines || {};
+      window.__timelines["mpc-demo"] = tl;
+
+      tl.set("#s-title", { opacity: 1 }, 0);
+      tl.from("#s-title h1", { y: 24, opacity: 0, duration: 0.7 }, 0);
+      tl.to("#s-title", { opacity: 0, duration: 0.45 }, 7);
+
+      tl.set("#s-power", { opacity: 1 }, 7.5);
+      const pw = { val: 0 };
+      tl.to(
+        pw,
+        {
+          val: 1,
+          duration: 26,
+          ease: "none",
+          onUpdate: () => drawPowerChart(document.getElementById("cv-power"), pw.val),
+        },
+        7.5
+      );
+      tl.to("#s-power", { opacity: 0, duration: 0.45 }, 34);
+
+      tl.set("#s-horizon", { opacity: 1 }, 34.5);
+      const hi = { idx: 0 };
+      tl.to(
+        hi,
+        {
+          idx: D.horizon.length - 1,
+          duration: 12,
+          ease: "none",
+          onUpdate: () => drawHorizon(document.getElementById("cv-horizon"), hi.idx),
+        },
+        34.5
+      );
+      tl.to("#s-horizon", { opacity: 0, duration: 0.45 }, 47);
+
+      const violRows = buildBars(
+        document.getElementById("bars-viol"),
+        "power_constraints",
+        "violations",
+        (v) => v.toFixed(0)
+      );
+      const setRows = buildBars(
+        document.getElementById("bars-settle"),
+        "setpoint_tracking",
+        "settling_s",
+        (v) => v.toFixed(0)
+      );
+      const iaeRows = buildBars(
+        document.getElementById("bars-iae"),
+        "setpoint_tracking",
+        "iae",
+        (v) => v.toFixed(0)
+      );
+
+      tl.set("#s-score", { opacity: 1 }, 47.5);
+      let t0 = 48;
+      violRows.forEach((row, i) => {
+        tl.to(row._fill, { width: row._target + "%", duration: 1, ease: "power2.out" }, t0 + i * 0.35);
+      });
+      t0 += 2.2;
+      setRows.forEach((row, i) => {
+        tl.to(row._fill, { width: row._target + "%", duration: 1, ease: "power2.out" }, t0 + i * 0.35);
+      });
+      t0 += 2.2;
+      iaeRows.forEach((row, i) => {
+        tl.to(row._fill, { width: row._target + "%", duration: 1, ease: "power2.out" }, t0 + i * 0.35);
+      });
+      tl.to("#s-score", { opacity: 0, duration: 0.45 }, 68);
+
+      tl.set("#s-close", { opacity: 1 }, 68.5);
+      tl.from("#s-close .lead", { y: 16, opacity: 0, duration: 0.6 }, 68.5);
+
+      tl.seek(0);
+    </script>
+  </body>
+</html>

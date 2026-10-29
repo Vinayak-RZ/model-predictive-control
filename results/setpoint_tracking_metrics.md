@@ -1,12 +1,10 @@
 # Setpoint tracking
 
-Temperature setpoint steps from 80 °C to 120 °C at 30 s. Compares how quickly each controller reaches the new target.
+MPC vs PID vs optimized PID (Kp=0.657, Ki=0.0143, Kd=4.54e-07)
 
-| Metric | MPC | PID |
-| --- | --- | --- |
-| IAE | 1.82e+03 | 2.48e+03 |
-| ISE | 4.3e+04 | 5.41e+04 |
-| Overshoot [%] | 2.85 | 0 |
-| Settling time [s] | 101 | 179 |
-| Constraint violation steps | 0 | 0 |
-| Energy [kWh] | 5.79 | 4.88 |
+| Metric | MPC | PID | Opt. PID |
+| --- | --- | --- | --- |
+| IAE | 1.82e+03 | 2.48e+03 | 1.47e+03 |
+| Violations | 0 | 0 | 0 |
+| Settling [s] | 101 | 179 | 99 |
+
