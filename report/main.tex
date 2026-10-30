@@ -39,7 +39,7 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-Model predictive control (MPC) looks ahead: it uses a plant model to try future power moves, then picks the best safe move at every sample.
+Model predictive control (MPC) plans the next actuator move by rolling a plant model forward over a finite horizon and solving a constrained optimisation at every sample.
 In this report we build a simple offset-free MPC for an induction heater, run it on a CasADi heat-balance simulator, and compare it with a hand-tuned PID and a SciPy-optimised PID on the same tests.
 We score tracking with integrated absolute error (IAE) and also count power-limit violations.
 After a short retune (let the horizon see the future setpoint, \(N{=}40\), terminal weight \(Q_t{=}50\)), MPC has the best IAE on setpoint tracking (\(1044\) vs \(1466\) vs \(2477\)), under tight power limits (\(8727\) vs \(9033\) vs \(9153\)), and under model mismatch (\(1214\) vs \(1667\) vs \(2541\)), with no limit violations when constraints are active.
