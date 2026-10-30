@@ -40,7 +40,7 @@
 
 \begin{abstract}
 Model predictive control (MPC) plans the next actuator move by rolling a plant model forward over a finite horizon and solving a constrained optimisation at every sample.
-In this report we build a simple offset-free MPC for an induction heater, run it on a CasADi heat-balance simulator, and compare it with a hand-tuned PID and a SciPy-optimised PID on the same tests.
+In this report we build a simple offset-free MPC for an induction heater, run it on a nonlinear heat-balance simulation, and compare it with a hand-tuned PID and an optimised PID on the same tests.
 We score tracking with integrated absolute error (IAE) and also count power-limit violations.
 After a short retune (let the horizon see the future setpoint, \(N{=}40\), terminal weight \(Q_t{=}50\)), MPC has the best IAE on setpoint tracking (\(1044\) vs \(1466\) vs \(2477\)), under tight power limits (\(8727\) vs \(9033\) vs \(9153\)), and under model mismatch (\(1214\) vs \(1667\) vs \(2541\)), with no limit violations when constraints are active.
 Optimised PID is slightly better on two disturbance tests when it is tuned on those same tests.
@@ -60,8 +60,8 @@ A PID loop reacts only after temperature has already moved, and cutting an illeg
 MPC uses a model to predict what temperature will do under different power choices, re-solves every sample (receding horizon), and can enforce power and rate limits inside the optimiser~\cite{rawlings2017,camacho2013}.
 Figure~\ref{fig:mpc-loop} shows the idea: predict over a short horizon, apply only the first chosen move, then measure the plant and repeat.
 
-We implement that idea with a fitted linear model plus a disturbance estimate for offset-free tracking~\cite{pannocchia2003}, a SciPy solver, a CasADi heater simulator as the truth plant, batch metrics, and a three-screen Streamlit lab.
-The physical numbers in this report are illustrative coursework values, not field data.
+We implement that idea with a fitted linear model plus a disturbance estimate for offset-free tracking~\cite{pannocchia2003}, a numerical optimiser, and a nonlinear heater simulation as the truth plant.
+The physical numbers in this report are illustrative, not field data.
 
 The practical question is: after we retune the MPC settings (Section~\ref{sec:retune}), and after we let an optimised PID see each test during tuning, which controller should run this limited heater?
 
@@ -72,7 +72,7 @@ The plant is a simple heat balance on workpiece temperature \(T\):
   m c_p \frac{dT}{dt} = \eta P_{\mathrm{coil}} - U\bigl(T - T_{\mathrm{amb}}\bigr),
   \label{eq:heat}
 \end{equation}
-integrated with explicit Euler in CasADi. Demo parameters are
+integrated with explicit Euler. Demo parameters are
 \(m{=}800\,\mathrm{kg}\), \(c_p{=}480\,\mathrm{J\,kg^{-1}\,K^{-1}}\), \(\eta{=}0.82\),
 \(U{=}45\,\mathrm{W\,K^{-1}}\), \(T_{\mathrm{amb}}{=}25\,\unitC\).
 
@@ -101,7 +101,7 @@ The chosen \(u\) must stay inside the coil power window and the one-step slew li
   \max(u_{\min},\, u_0 - \Delta u_{\max}) \le u \le \min(u_{\max},\, u_0 + \Delta u_{\max}).
 \end{equation}
 Only the first move is applied; then the horizon shifts forward.
-We solve the problem with SciPy \texttt{L-BFGS-B}.
+We solve the problem with a bounded quasi-Newton optimiser.
 
 \subsection{PID baseline}
 The discrete PID is
@@ -109,22 +109,22 @@ The discrete PID is
   u_k = u_{k-1} + K_p e_k + K_i \sum e + K_d \frac{e_k - e_{k-1}}{\Delta t},
 \end{equation}
 with back-calculation anti-windup when the actuator saturates~\cite{astrom2006}.
-Hand-tuned gains are the scenario defaults in the repository.
-Optimised PID uses SciPy \texttt{L-BFGS-B} to minimise \(\mathrm{IAE} + 250\times(\text{violation steps})\) on the same plant, noise seed, and limits, with bounds \(K_p\in[0.05,12]\), \(K_i\in[0,0.35]\), \(K_d\in[0,8]\).
+Hand-tuned gains are fixed scenario defaults.
+Optimised PID uses the same bounded optimiser to minimise \(\mathrm{IAE} + 250\times(\text{violation steps})\) on the same plant, noise seed, and limits, with bounds \(K_p\in[0.05,12]\), \(K_i\in[0,0.35]\), \(K_d\in[0,8]\).
 
 \section{System design and implementation}
 \label{sec:design}
 Figure~\ref{fig:arch} shows the closed loop.
-MPC, hand-tuned PID, and optimised PID all drive the same CasADi simulator and are scored with the same metrics: IAE, ISE, overshoot, \(\pm 3\%\) settling time, constraint-violation steps, and energy \(\int P\,dt\).
+MPC, hand-tuned PID, and optimised PID all drive the same simulated heater and are scored with the same metrics: IAE, ISE, overshoot, \(\pm 3\%\) settling time, constraint-violation steps, and energy \(\int P\,dt\).
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\textwidth]{figures/architecture.png}
-  \caption{Simulation architecture: offset-free MPC and both PID variants act on one heater twin.}
+  \caption{Simulation architecture: offset-free MPC and both PID variants act on one heater model.}
   \label{fig:arch}
 \end{figure}
 
-The repository also includes a Streamlit lab (Playground, Step-through, Scorecard) that uses the same presets as the batch metrics below.
+An interactive comparison tool (Playground, Step-through, Scorecard) uses the same scenario settings as the batch metrics below.
 Figure~\ref{fig:ui} shows those three screens.
 
 \begin{figure}[H]
@@ -141,7 +141,7 @@ Figure~\ref{fig:ui} shows those three screens.
     \includegraphics[width=\linewidth]{figures/streamlit-scorecard.png}
     \caption{Scorecard}
   \end{subfigure}
-  \caption{Interactive lab screens used to inspect MPC against both PID baselines.}
+  \caption{Interactive screens used to compare MPC with both PID baselines.}
   \label{fig:ui}
 \end{figure}
 
@@ -172,8 +172,6 @@ Setpoint-tracking IAE & 1824.3 & 1044.3 \\
 \label{tab:retune}
 \end{table}
 
-These settings live in the repository defaults under \texttt{src/mpc\_core/} (\texttt{mpc.py}, \texttt{sim/config.py}).
-
 \section{Experimental setup}
 Sample time \(\Delta t{=}1\,\mathrm{s}\).
 Default power window \(0\)--\(250\,\mathrm{kW}\) with slew \(25\,\mathrm{kW\,s^{-1}}\).
@@ -182,7 +180,7 @@ We use five scenarios:
 \begin{enumerate}
   \item \textbf{Setpoint tracking:} \(80\to 120\,\unitC\) at \(30\,\mathrm{s}\) (duration \(180\,\mathrm{s}\)).
   \item \textbf{Disturbance rejection:} hold \(115\,\unitC\); heat-loss \(U\) rises \(45\%\) at \(70\,\mathrm{s}\).
-  \item \textbf{Power limits:} cap \(150\,\mathrm{kW}\), slew \(8\,\mathrm{kW\,s^{-1}}\), target \(165\,\unitC\). Hand-tuned PID has rate limiting off (as in the repository scenario) to show the cost of ignoring slew; MPC and optimised PID stay within limits.
+  \item \textbf{Power limits:} cap \(150\,\mathrm{kW}\), slew \(8\,\mathrm{kW\,s^{-1}}\), target \(165\,\unitC\). Hand-tuned PID has rate limiting off in this scenario to show the cost of ignoring slew; MPC and optimised PID stay within limits.
   \item \textbf{Model mismatch:} same setpoint test, but plant mass \({+}8\%\), efficiency \({-}6\%\), heat loss \({+}18\%\). MPC still uses the nominal ARX model.
   \item \textbf{Ambient step:} \(T_{\mathrm{amb}}\) rises by \(8\,\mathrm{K}\) at \(70\,\mathrm{s}\).
 \end{enumerate}
@@ -288,15 +286,14 @@ Those gains were fitted on the same disturbance the controller then faces, so th
 MPC still settles faster in both cases (\(46\,\mathrm{s}\) vs \(60\,\mathrm{s}\)) because \(\hat{d}\) absorbs the load change without a retune.
 Hand-tuned PID is never best on IAE or settling here; its only ``win'' on energy in the power-limit case comes with six illegal slew steps.
 
-This coursework controller still has limits: only one free move (\(N_u{=}1\)), a linear predictor against a nonlinear plant, power constraints only (no temperature constraint), and illustrative parameters.
-A production design would add move blocking, multi-input coupling, and a clearer model check before recommending a move.
-The Streamlit lab is for teaching, not a PLC programme.
+Limitations remain: only one free move (\(N_u{=}1\)), a linear predictor against a nonlinear plant, power constraints only (no temperature constraint), and illustrative parameters.
+A fuller design could add move blocking, multi-input coupling, and tighter model validation before recommending a move.
 
 \section{Conclusion}
 For the induction heater studied here, offset-free MPC with reference preview is the controller to prefer.
 After the retune it leads on the main tracking and constraint metrics, keeps the coil inside limits by design, and stays ahead of both a frozen and a retuned PID when the plant is mismatched.
 Where a scenario-tuned PID still posts a slightly lower disturbance IAE, the gap is small, and that PID needs offline retuning that MPC does not.
-The retuned settings (\(N{=}40\), \(Q_t{=}50\), preview on) are the defaults used for the figures in this report.
+The retuned settings used for the figures are \(N{=}40\), \(Q_t{=}50\), and reference preview enabled.
 
 \enlargethispage{4\baselineskip}
 \vspace{-0.6em}
@@ -321,16 +318,6 @@ London: Springer, 2013.
 K.~J.~\r{A}str\"om and T.~H\"agglund,
 \emph{Advanced PID Control}.
 Research Triangle Park, NC: ISA, 2006.
-
-\bibitem{scipy}
-P.~Virtanen et~al.,
-``SciPy 1.0: Fundamental algorithms for scientific computing in Python,''
-\emph{Nature Methods}, vol.~17, pp.~261--272, 2020.
-
-\bibitem{casadi}
-J.~A.~E.~Andersson, J.~Gillis, G.~Horn, J.~B.~Rawlings, and M.~Diehl,
-``CasADi: a software framework for nonlinear optimization and optimal control,''
-\emph{Mathematical Programming Computation}, vol.~11, pp.~1--36, 2019.
 \end{thebibliography}
 
 \end{document}
