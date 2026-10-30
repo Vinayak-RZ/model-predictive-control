@@ -12,6 +12,8 @@
   <a href="#quick-start"><b>Quick start</b></a> ·
   <a href="#interactive-app"><b>Interactive app</b></a> ·
   <a href="#showcase-video"><b>Video</b></a> ·
+  <a href="docs/EXPLAINER.md"><b>Explainer</b></a> ·
+  <a href="docs/THEORY.md"><b>Theory</b></a> ·
   <a href="HOW-IT-WORKS.md"><b>How it works</b></a> ·
   <a href="report/report.md"><b>Report</b></a>
 </p>
@@ -157,6 +159,6 @@ Simulation plots:
          PID + optimised PID (same plant, same metrics)
 ```
 
-Details: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.md`](report/report.md)
+Plain story: [`docs/EXPLAINER.md`](docs/EXPLAINER.md) · Maths / EE: [`docs/THEORY.md`](docs/THEORY.md) · Engineering notes: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.md`](report/report.md)
 
 Educational use. Licences: [`CREDITS.md`](CREDITS.md).
