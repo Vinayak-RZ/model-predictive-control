@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import path_setup  # noqa: F401
 import streamlit as st
 
 from mpc_core.sim.copy_text import (

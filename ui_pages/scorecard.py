@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import path_setup  # noqa: F401
 import pandas as pd
 import streamlit as st
 

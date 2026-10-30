@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import path_setup  # noqa: F401
 import streamlit as st
 
 from mpc_core.sim.config import default_demo_config

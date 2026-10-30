@@ -1,6 +1,13 @@
-"""MPC Heater Lab — Streamlit entry (st.navigation)."""
+"""MPC Heater Lab — Streamlit entrypoint (st.Page + st.navigation).
+
+Community Cloud runs ``streamlit run app.py`` from the repo root and installs only
+requirements.txt (Streamlit app-dependencies docs). Local package code lives under
+src/; ``path_setup`` adds that directory so pages can ``import mpc_core``.
+"""
 
 from __future__ import annotations
+
+import path_setup  # noqa: F401 — src/ on sys.path before page imports
 
 import streamlit as st
 

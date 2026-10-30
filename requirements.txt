@@ -1,6 +1,11 @@
-# Runtime deps for Streamlit Community Cloud.
+# Streamlit Community Cloud: only this file is used for Python deps (not pyproject.toml).
+# Docs: https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies
 # Deploy with Advanced settings → Python 3.12 (not 3.13/3.14).
 # On 3.14, pip builds numpy/scipy/pandas from source and the install hangs.
+#
+# Do not use `-e .` here — Community Cloud / uv do not reliably install editable
+# local packages. path_setup.py (imported by app.py and ui_pages) adds src/ to
+# sys.path so `import mpc_core` works (src-layout pattern on discuss.streamlit.io).
 numpy==2.2.6
 scipy==1.15.3
 casadi==3.8.2
