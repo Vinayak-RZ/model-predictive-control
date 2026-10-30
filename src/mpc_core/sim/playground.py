@@ -31,7 +31,7 @@ class PlaygroundParams:
     noise_std_c: float = 0.0
     noise_seed: int = 42
     model_mismatch: bool = False
-    mpc_horizon: int = 25
+    mpc_horizon: int = 40
     mpc_tracking_weight: float = 1.0
     pid_kp: float = 2.8
     pid_ki: float = 0.04
@@ -215,7 +215,7 @@ PRESETS: dict[str, Callable[[PlaygroundParams], PlaygroundParams]] = {
         ref_low_c=85.0,
         ref_high_c=155.0,
         ref_step_at_s=15.0,
-        mpc_horizon=30,
+        mpc_horizon=45,
         # PID may break the slew; MPC still respects it in the plan.
         enforce_pid_rate=False,
     ),

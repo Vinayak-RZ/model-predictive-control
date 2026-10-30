@@ -19,10 +19,21 @@ class DemoConfig:
     horizon_steps: int
     solver_time_limit_s: float
     setpoint_id: str = "power_setpoint"
+    control_horizon: int = 1
+    move_weight: float = 0.0
+    terminal_weight: float = 0.0
+    observer_gain: float = 1.0
+    tracking_weight: float = 1.0
 
 
 def default_demo_config() -> DemoConfig:
-    """Heater fixture scaled for a slow thermal response; ARX fitted offline."""
+    """Heater fixture scaled for a slow thermal response; ARX fitted offline.
+
+    Retuned MPC defaults (coursework, box experiments 31 Oct 2026):
+    prediction horizon 40, control horizon 1 (held move), terminal weight 50,
+    reference preview enabled in the simulator, observer gain 1.0.
+    Same plant and ARX as before. Multi-move trials raised IAE on this heater.
+    """
     ibh = IBHParams(
         m_kg=800.0,
         c_p_j_per_kg_k=480.0,
@@ -46,6 +57,11 @@ def default_demo_config() -> DemoConfig:
         model=model,
         limits=limits,
         dt_s=1.0,
-        horizon_steps=25,
+        horizon_steps=40,
         solver_time_limit_s=2.0,
+        control_horizon=1,
+        move_weight=0.0,
+        terminal_weight=50.0,
+        observer_gain=1.0,
+        tracking_weight=1.0,
     )
