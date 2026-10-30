@@ -30,6 +30,19 @@ python3 scripts/precompute_ui_data.py
 streamlit run app.py
 ```
 
+### Deploy
+
+- **Streamlit Community Cloud** — full interactive lab (`app.py` + `requirements.txt`).
+- **Vercel** — static mirror under `web/` (same charts/presets from precomputed `data/ui`). Streamlit itself does not run on Vercel, so deploy the static site from `web/`:
+
+```bash
+python scripts/sync_web_data.py
+cd web
+vercel --prod
+```
+
+Or on Windows: `powershell -File scripts/deploy_vercel.ps1`. In the Vercel project settings, set **Root Directory** to `web` so Vercel does not treat root `app.py` as a Python serverless entry.
+
 ## Interactive app
 
 Theme: `.streamlit/config.toml` (cobalt accent `#2F6FEB`). Regen shots with the app running: `python scripts/capture_streamlit_screenshots.py`.

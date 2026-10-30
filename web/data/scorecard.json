@@ -1,0 +1,100 @@
+{
+  "rows": [
+    {
+      "Scenario": "Setpoint Tracking",
+      "Controller": "MPC",
+      "Overshoot %": 1.1,
+      "Settling [s]": 88.0,
+      "Energy [kWh]": 5.41,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Setpoint Tracking",
+      "Controller": "PID",
+      "Overshoot %": 0.0,
+      "Settling [s]": 179.0,
+      "Energy [kWh]": 4.88,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Setpoint Tracking",
+      "Controller": "Optimized PID",
+      "Overshoot %": 0.4,
+      "Settling [s]": 112.0,
+      "Energy [kWh]": 5.22,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Disturbance Rejection",
+      "Controller": "MPC",
+      "Overshoot %": 0.8,
+      "Settling [s]": 54.0,
+      "Energy [kWh]": 3.71,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Disturbance Rejection",
+      "Controller": "PID",
+      "Overshoot %": 0.0,
+      "Settling [s]": 103.0,
+      "Energy [kWh]": 3.56,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Disturbance Rejection",
+      "Controller": "Optimized PID",
+      "Overshoot %": 0.9,
+      "Settling [s]": 71.0,
+      "Energy [kWh]": 3.62,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Power Constraints",
+      "Controller": "MPC",
+      "Overshoot %": 0.0,
+      "Settling [s]": 152.0,
+      "Energy [kWh]": 7.05,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Power Constraints",
+      "Controller": "PID",
+      "Overshoot %": 0.0,
+      "Settling [s]": 199.0,
+      "Energy [kWh]": 7.47,
+      "Violations": 9
+    },
+    {
+      "Scenario": "Power Constraints",
+      "Controller": "Optimized PID",
+      "Overshoot %": 0.0,
+      "Settling [s]": 199.0,
+      "Energy [kWh]": 7.12,
+      "Violations": 13
+    },
+    {
+      "Scenario": "Model Mismatch",
+      "Controller": "MPC",
+      "Overshoot %": 1.4,
+      "Settling [s]": 96.0,
+      "Energy [kWh]": 6.18,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Model Mismatch",
+      "Controller": "PID",
+      "Overshoot %": 0.0,
+      "Settling [s]": 167.0,
+      "Energy [kWh]": 5.78,
+      "Violations": 0
+    },
+    {
+      "Scenario": "Model Mismatch",
+      "Controller": "Optimized PID",
+      "Overshoot %": 0.9,
+      "Settling [s]": 124.0,
+      "Energy [kWh]": 6.05,
+      "Violations": 0
+    }
+  ]
+}
