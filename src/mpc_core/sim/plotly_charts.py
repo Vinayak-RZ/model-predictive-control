@@ -275,7 +275,14 @@ def mpc_horizon_figure(snapshot) -> go.Figure:
             height=460,
             xaxis_title="Time [s]",
             yaxis_title="Temperature [°C]",
-            margin=dict(l=48, r=24, t=56, b=48),
+            margin=dict(l=56, r=24, t=72, b=48),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                x=0,
+                bgcolor="rgba(250,250,249,0.92)",
+            ),
         )
     )
     _style_axes(fig)

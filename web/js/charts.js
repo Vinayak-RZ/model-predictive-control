@@ -166,9 +166,10 @@ export function horizonFigure(snap, el) {
     {
       ...layoutBase,
       height: 420,
+      margin: { l: 56, r: 24, t: 48, b: 52 },
+      legend: { orientation: "h", y: 1.08, x: 0, bgcolor: "rgba(250,250,249,0.9)" },
       xaxis: { title: "Time [s]", gridcolor: COLORS.border },
-      yaxis: { title: "Temperature [°C]", gridcolor: COLORS.border },
-      title: { text: snap.caption || `t = ${t0.toFixed(0)} s`, font: { size: 14 } },
+      yaxis: { title: "Temperature [°C]", gridcolor: COLORS.border, automargin: true },
     },
     { responsive: true, displayModeBar: false }
   );

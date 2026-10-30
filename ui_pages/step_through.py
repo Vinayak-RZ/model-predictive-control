@@ -76,7 +76,6 @@ with nav3:
         st.session_state.mpc_step_idx = scrub - 1
         st.rerun()
 
-m1, m2, m3, m4 = st.columns(4)
 m1, m2, m3, m4, m5 = st.columns(5)
 m1.metric("Applied power", f"{snap.u_applied:.2f} kW")
 m2.metric("Disturbance d̂", f"{snap.d_hat:.3f}")
@@ -84,5 +83,5 @@ m3.metric("Measured", f"{snap.y_meas:.1f} °C")
 m4.metric("Setpoint", f"{snap.y_ref:.1f} °C")
 m5.metric("Solve time", f"{snap.solve_ms:.2f} ms")
 
+st.info(snap.caption)
 st.plotly_chart(mpc_horizon_figure(snap), use_container_width=True)
-st.caption(snap.caption)

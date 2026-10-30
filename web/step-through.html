@@ -33,8 +33,9 @@
             <input id="step" type="range" min="0" max="0" value="0" style="flex:1" />
             <span id="stepLabel" class="caption" style="margin:0"></span>
           </div>
+          <div class="callout" id="caption" style="margin-top:8px;margin-bottom:16px"></div>
+          <p class="caption" id="meta" style="margin-bottom:12px"></p>
           <div class="chart" id="chart"></div>
-          <p class="caption" id="meta"></p>
         </main>
       `;
 
@@ -53,6 +54,9 @@
         const snap = snaps[i];
         if (!snap) return;
         document.getElementById("stepLabel").textContent = `${i + 1} / ${snaps.length}`;
+        document.getElementById("caption").textContent =
+          snap.caption ||
+          `At t=${snap.time_s.toFixed(0)}s the measured temperature is ${snap.y_meas.toFixed(1)}°C.`;
         document.getElementById("meta").textContent =
           `y=${snap.y_meas.toFixed(2)} °C · u=${snap.u_applied.toFixed(1)} kW · d̂=${snap.d_hat.toFixed(3)} · solve ${snap.solve_ms.toFixed(2)} ms`;
         horizonFigure(snap, document.getElementById("chart"));
