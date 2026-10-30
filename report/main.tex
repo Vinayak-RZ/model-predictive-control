@@ -39,68 +39,69 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-Model predictive control (MPC) plans the next actuator move by rolling a plant model forward over a finite horizon and solving a constrained optimisation at every sample.
-This report builds an offset-free SISO MPC for a lumped induction heater, simulates it against a nonlinear CasADi heat-balance twin, and compares it with a hand-tuned discrete PID and a SciPy-optimised PID that minimises integrated absolute error (IAE) plus a violation penalty on the same plant, seed, and limits.
-After a documented retune (reference preview over the horizon, prediction length \(N{=}40\), terminal weight \(Q_t{=}50\)), MPC records the lowest IAE on setpoint tracking (\(1044\) vs \(1466\) optimised PID vs \(2477\) hand-tuned PID), on the power-limit case (\(8727\) vs \(9033\) vs \(9153\)), and under model mismatch (\(1214\) vs \(1667\) vs \(2541\)), with zero constraint violations wherever limits bind.
-Optimised PID still edges MPC on two disturbance IAE numbers when it is retuned on those exact scenarios; those rows are reported without emphasis.
-The verdict for this constrained heater is that MPC is the better controller: it keeps the coil inside the power window and slew limit by construction, recovers faster after mismatch, and no longer trails a scenario-tuned PID on the main tracking metrics once the horizon is allowed to see the future setpoint.
+Model predictive control (MPC) looks ahead: it uses a plant model to try future power moves, then picks the best safe move at every sample.
+In this report we build a simple offset-free MPC for an induction heater, run it on a CasADi heat-balance simulator, and compare it with a hand-tuned PID and a SciPy-optimised PID on the same tests.
+We score tracking with integrated absolute error (IAE) and also count power-limit violations.
+After a short retune (let the horizon see the future setpoint, \(N{=}40\), terminal weight \(Q_t{=}50\)), MPC has the best IAE on setpoint tracking (\(1044\) vs \(1466\) vs \(2477\)), under tight power limits (\(8727\) vs \(9033\) vs \(9153\)), and under model mismatch (\(1214\) vs \(1667\) vs \(2541\)), with no limit violations when constraints are active.
+Optimised PID is slightly better on two disturbance tests when it is tuned on those same tests.
+Overall, MPC is the better choice for this heater: it respects coil power and slew limits by design, recovers faster when the model is wrong, and matches or beats PID on the main tracking cases once it can see the coming setpoint.
 \end{abstract}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.92\textwidth]{figures/mpc-infographic.png}
-  \caption{Model predictive control loop: optimisation over predicted states and inputs, simulation model inside the horizon, and plant feedback with disturbance \(\theta(t)\).}
+  \caption{MPC loop: predict states and inputs over a horizon, apply the first move to the plant, and close the loop with measured feedback and disturbance \(\theta(t)\).}
   \label{fig:mpc-loop}
 \end{figure}
 
 \section{Introduction}
-Induction heaters are slow thermal plants with hard coil-power and slew limits.
-A PID loop only reacts after temperature has already drifted, and clipping the actuator after the fact does not undo an infeasible command.
-MPC uses a model to anticipate the temperature trajectory under candidate power profiles, re-optimises every sample (receding horizon), and can treat window and rate limits as hard constraints inside the optimiser~\cite{rawlings2017,camacho2013}.
-Figure~\ref{fig:mpc-loop} summarises that loop: an optimiser rolls a simulation model over a finite horizon, applies only the first optimal move to the plant, and closes with measured state feedback.
+Induction heaters respond slowly and have hard limits on coil power and how fast that power may change.
+A PID loop reacts only after temperature has already moved, and cutting an illegal power command after the fact does not fix the mistake.
+MPC uses a model to predict what temperature will do under different power choices, re-solves every sample (receding horizon), and can enforce power and rate limits inside the optimiser~\cite{rawlings2017,camacho2013}.
+Figure~\ref{fig:mpc-loop} shows the idea: predict over a short horizon, apply only the first chosen move, then measure the plant and repeat.
 
-The project implements that idea for coursework: an identified discrete linear model with an integrating disturbance estimate~\cite{pannocchia2003}, a SciPy quadratic programme, a CasADi heater twin as the truth plant, batch metrics, and a three-screen Streamlit lab.
-All physical numbers below are illustrative coursework values, not customer or field data.
+We implement that idea with a fitted linear model plus a disturbance estimate for offset-free tracking~\cite{pannocchia2003}, a SciPy solver, a CasADi heater simulator as the truth plant, batch metrics, and a three-screen Streamlit lab.
+The physical numbers in this report are illustrative coursework values, not field data.
 
-The question answered here is practical: after an honest retune of the MPC knobs (documented in Section~\ref{sec:retune}), and with an optimised PID that is allowed to see each scenario during tuning, which controller should run this constrained heater?
+The practical question is: after we retune the MPC settings (Section~\ref{sec:retune}), and after we let an optimised PID see each test during tuning, which controller should run this limited heater?
 
 \section{Background}
 \subsection{Heater plant}
-The simulation plant is a lumped heat balance on workpiece temperature \(T\):
+The plant is a simple heat balance on workpiece temperature \(T\):
 \begin{equation}
   m c_p \frac{dT}{dt} = \eta P_{\mathrm{coil}} - U\bigl(T - T_{\mathrm{amb}}\bigr),
   \label{eq:heat}
 \end{equation}
-stepped with explicit Euler in CasADi. Demo parameters are
+integrated with explicit Euler in CasADi. Demo parameters are
 \(m{=}800\,\mathrm{kg}\), \(c_p{=}480\,\mathrm{J\,kg^{-1}\,K^{-1}}\), \(\eta{=}0.82\),
 \(U{=}45\,\mathrm{W\,K^{-1}}\), \(T_{\mathrm{amb}}{=}25\,\unitC\).
 
 \subsection{Identified prediction model}
-MPC predicts with the SISO ARX
+MPC predicts with a one-step SISO ARX model
 \begin{equation}
   y_{k+1} = a y_k + b u_k + \hat{d}_k,
   \label{eq:arx}
 \end{equation}
-with \(a{=}0.978\), \(b{=}0.042\), \(\Delta t{=}1\,\mathrm{s}\) from a 120\,s least-squares step fit on the twin (\(\mathrm{RMS}\) residual \(0.35\,\unitC\)).
-Offset-free behaviour uses the integrating disturbance of Pannocchia and Rawlings~\cite{pannocchia2003}. After the first sample,
+with \(a{=}0.978\), \(b{=}0.042\), \(\Delta t{=}1\,\mathrm{s}\) from a 120\,s least-squares step fit on the simulator (\(\mathrm{RMS}\) residual \(0.35\,\unitC\)).
+To remove steady-state offset we use the integrating disturbance of Pannocchia and Rawlings~\cite{pannocchia2003}. After the first sample,
 \begin{equation}
   \hat{d}_{k} \leftarrow \hat{d}_{k-1} + g\bigl(y_k^{\mathrm{meas}} - \hat{y}_{k\mid k-1}\bigr),
 \end{equation}
-with observer gain \(g{=}1\) (full innovation) in the retuned controller.
+with observer gain \(g{=}1\) in the retuned controller.
 
 \subsection{MPC cost, constraints, and receding horizon}
-Over prediction horizon \(N\) the controller holds a single free move \(u\) (control horizon \(N_u{=}1\) after the sweep in Section~\ref{sec:retune}) and minimises
+Over horizon \(N\) the controller chooses one free move \(u\) (control horizon \(N_u{=}1\) after the sweep in Section~\ref{sec:retune}) and minimises
 \begin{equation}
   J(u) = \sum_{i=1}^{N} \bigl(y_i - r_i\bigr)^2 + Q_t\bigl(y_N - r_N\bigr)^2,
   \label{eq:cost}
 \end{equation}
-where \(r_i\) is the \emph{previewed} reference over the horizon.
-Decision \(u\) is boxed by the coil window and the one-step slew limit:
+where \(r_i\) is the future setpoint seen over the horizon (reference preview).
+The chosen \(u\) must stay inside the coil power window and the one-step slew limit:
 \begin{equation}
   \max(u_{\min},\, u_0 - \Delta u_{\max}) \le u \le \min(u_{\max},\, u_0 + \Delta u_{\max}).
 \end{equation}
-Only the first move is applied; the horizon then shifts (receding horizon).
-The QP is solved with SciPy \texttt{L-BFGS-B}.
+Only the first move is applied; then the horizon shifts forward.
+We solve the problem with SciPy \texttt{L-BFGS-B}.
 
 \subsection{PID baseline}
 The discrete PID is
@@ -108,13 +109,13 @@ The discrete PID is
   u_k = u_{k-1} + K_p e_k + K_i \sum e + K_d \frac{e_k - e_{k-1}}{\Delta t},
 \end{equation}
 with back-calculation anti-windup when the actuator saturates~\cite{astrom2006}.
-Hand-tuned gains are scenario defaults in the repository.
+Hand-tuned gains are the scenario defaults in the repository.
 Optimised PID uses SciPy \texttt{L-BFGS-B} to minimise \(\mathrm{IAE} + 250\times(\text{violation steps})\) on the same plant, noise seed, and limits, with bounds \(K_p\in[0.05,12]\), \(K_i\in[0,0.35]\), \(K_d\in[0,8]\).
 
 \section{System design and implementation}
 \label{sec:design}
 Figure~\ref{fig:arch} shows the closed loop.
-MPC, hand-tuned PID, and optimised PID all drive the same CasADi twin and are scored with the same metrics (IAE, ISE, overshoot, \(\pm 3\%\) settling, constraint-violation steps, energy \(\int P\,dt\)).
+MPC, hand-tuned PID, and optimised PID all drive the same CasADi simulator and are scored with the same metrics: IAE, ISE, overshoot, \(\pm 3\%\) settling time, constraint-violation steps, and energy \(\int P\,dt\).
 
 \begin{figure}[H]
   \centering
@@ -123,7 +124,7 @@ MPC, hand-tuned PID, and optimised PID all drive the same CasADi twin and are sc
   \label{fig:arch}
 \end{figure}
 
-The repository also ships a multipage Streamlit lab (Playground, Step-through, Scorecard) driven by the same simulation presets used for the batch metrics below.
+The repository also includes a Streamlit lab (Playground, Step-through, Scorecard) that uses the same presets as the batch metrics below.
 Figure~\ref{fig:ui} shows those three screens.
 
 \begin{figure}[H]
@@ -146,9 +147,10 @@ Figure~\ref{fig:ui} shows those three screens.
 
 \subsection{Retuned MPC parameters}
 \label{sec:retune}
-A short grid on setpoint tracking compared legacy settings (\(N{=}25\), \(N_u{=}1\), no preview, \(Q_t{=}0\)) with longer horizons, multi-move \(N_u\), terminal weights, move penalties, and observer gains.
-Multi-move sequences with a move penalty raised IAE on this heater; the change that moved the needle was \textbf{reference preview} plus a longer horizon and a terminal weight.
-Retuned values used for all results below:
+We ran a short grid on setpoint tracking, starting from legacy settings (\(N{=}25\), \(N_u{=}1\), no preview, \(Q_t{=}0\)) and trying longer horizons, multi-move \(N_u\), terminal weights, move penalties, and observer gains.
+Allowing several free moves with a move penalty made IAE worse on this heater.
+What helped most was \textbf{reference preview}, a longer horizon, and a terminal weight.
+The retuned values used for all results below are:
 
 \begin{table}[H]
 \centering
@@ -166,35 +168,35 @@ Reference preview & no & yes \\
 Setpoint-tracking IAE & 1824.3 & 1044.3 \\
 \bottomrule
 \end{tabular}
-\caption{MPC knobs before and after the retune. Only the working copy was changed.}
+\caption{MPC settings before and after the retune.}
 \label{tab:retune}
 \end{table}
 
-These knobs live in the repository defaults under \texttt{src/mpc\_core/} (\texttt{mpc.py}, \texttt{sim/config.py}).
+These settings live in the repository defaults under \texttt{src/mpc\_core/} (\texttt{mpc.py}, \texttt{sim/config.py}).
 
 \section{Experimental setup}
 Sample time \(\Delta t{=}1\,\mathrm{s}\).
-Default actuator window \(0\)--\(250\,\mathrm{kW}\) with slew \(25\,\mathrm{kW\,s^{-1}}\).
-Scenarios:
+Default power window \(0\)--\(250\,\mathrm{kW}\) with slew \(25\,\mathrm{kW\,s^{-1}}\).
+We use five scenarios:
 
 \begin{enumerate}
   \item \textbf{Setpoint tracking:} \(80\to 120\,\unitC\) at \(30\,\mathrm{s}\) (duration \(180\,\mathrm{s}\)).
-  \item \textbf{Disturbance rejection:} track \(115\,\unitC\); heat-loss \(U\) rises \(45\%\) at \(70\,\mathrm{s}\).
-  \item \textbf{Power limits:} cap \(150\,\mathrm{kW}\), slew \(8\,\mathrm{kW\,s^{-1}}\), target \(165\,\unitC\). Hand-tuned PID has rate limiting disabled (as in the repository scenario) to show the cost of ignoring slew; MPC and optimised PID stay feasible.
-  \item \textbf{Model mismatch:} same setpoint test; plant mass \({+}8\%\), efficiency \({-}6\%\), heat loss \({+}18\%\). MPC still uses the nominal ARX.
+  \item \textbf{Disturbance rejection:} hold \(115\,\unitC\); heat-loss \(U\) rises \(45\%\) at \(70\,\mathrm{s}\).
+  \item \textbf{Power limits:} cap \(150\,\mathrm{kW}\), slew \(8\,\mathrm{kW\,s^{-1}}\), target \(165\,\unitC\). Hand-tuned PID has rate limiting off (as in the repository scenario) to show the cost of ignoring slew; MPC and optimised PID stay within limits.
+  \item \textbf{Model mismatch:} same setpoint test, but plant mass \({+}8\%\), efficiency \({-}6\%\), heat loss \({+}18\%\). MPC still uses the nominal ARX model.
   \item \textbf{Ambient step:} \(T_{\mathrm{amb}}\) rises by \(8\,\mathrm{K}\) at \(70\,\mathrm{s}\).
 \end{enumerate}
-An additional robustness check evaluates optimised-PID gains tuned on the \emph{nominal} setpoint plant when the mismatched plant is substituted, against MPC and against an oracle PID retuned on the mismatch itself.
+We also run a robustness check: keep optimised-PID gains from the normal setpoint plant, then switch to the mismatched plant, and compare with MPC and with a PID retuned on the mismatch itself.
 
 \section{Results}
-Blue bold cells mark metrics where MPC is best among the three controllers.
-Other winners are left in plain type.
+Blue bold cells mark where MPC is best among the three controllers.
+Other winners stay in plain type.
 
 \subsection{Summary table}
 \begin{table}[H]
 \centering
 \scriptsize
-\caption{Closed-loop metrics from the retuned working copy. Blue bold = MPC best.}
+\caption{Closed-loop metrics after the MPC retune. Blue bold = MPC best.}
 \label{tab:summary}
 \begin{tabular}{llrrr}
 \toprule
@@ -217,8 +219,8 @@ Ambient step & IAE & 641.2 & 1092.4 & 578.3 \\
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:iae} summarises IAE; hatched bars are MPC wins and match the ranking in Table~\ref{tab:summary}.
-Figure~\ref{fig:traces} shows the four primary time responses used for that table: MPC reaches the \(120\,\unitC\) step first on setpoint tracking, stays feasible under the tight power cap, and recovers cleanly under mismatch, while optimised PID remains competitive on the heat-loss disturbance.
+Figure~\ref{fig:iae} summarises IAE; hatched bars are MPC wins and match Table~\ref{tab:summary}.
+Figure~\ref{fig:traces} shows the four main time plots behind that table: MPC reaches the \(120\,\unitC\) step first, stays inside the tight power cap, and recovers well under mismatch, while optimised PID stays close on the heat-loss disturbance.
 
 \begin{figure}[H]
   \centering
@@ -252,48 +254,49 @@ Figure~\ref{fig:traces} shows the four primary time responses used for that tabl
 \end{figure}
 
 \subsection{Power limits and violations}
-On the aggressive \(165\,\unitC\) request under a \(150\,\mathrm{kW}\) / \(8\,\mathrm{kW\,s^{-1}}\) ceiling, hand-tuned PID records \textbf{six} slew violations and a slightly lower energy only because those infeasible moves are allowed.
-MPC and optimised PID stay at zero violations; MPC also posts the lowest IAE (\(8727\)).
-Figure~\ref{fig:viol} makes the violation gap visible.
-Ambient-step IAE and settling in Table~\ref{tab:summary} follow the same disturbance pattern as Figure~\ref{fig:traces}(b): optimised PID edges IAE after a scenario retune, while MPC still settles faster via \(\hat{d}\).
+On the hard \(165\,\unitC\) request with a \(150\,\mathrm{kW}\) / \(8\,\mathrm{kW\,s^{-1}}\) ceiling, hand-tuned PID makes \textbf{six} slew violations and only looks slightly cheaper in energy because those illegal moves are allowed.
+MPC and optimised PID stay at zero violations; MPC also has the lowest IAE (\(8727\)).
+Figure~\ref{fig:viol} shows the gap.
+Ambient-step IAE and settling in Table~\ref{tab:summary} follow the same pattern as Figure~\ref{fig:traces}(b): optimised PID wins IAE after a scenario retune, while MPC still settles faster because \(\hat{d}\) absorbs the load change.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.72\textwidth]{figures/violations_power.png}
-  \caption{Constraint-violation counts on the power-limit scenario (PID records six slew breaches; MPC and optimised PID stay feasible).}
+  \caption{Constraint-violation counts on the power-limit scenario (PID has six slew breaches; MPC and optimised PID stay within limits).}
   \label{fig:viol}
 \end{figure}
 
 \subsection{Robustness}
-When optimised-PID gains from the nominal setpoint test are frozen and the mismatched plant is substituted, IAE rises to \(1702\).
+If we freeze optimised-PID gains from the normal setpoint test and then switch to the mismatched plant, IAE rises to \(1702\).
 MPC on the same mismatched plant stays at \(1214\).
-Even the oracle PID retuned on the mismatch itself only reaches \(1667\).
-Figure~\ref{fig:rob} shows the comparison and matches the mismatch column of Figure~\ref{fig:iae}.
+Even a PID retuned on the mismatch itself only reaches \(1667\).
+Figure~\ref{fig:rob} shows the comparison and matches the mismatch bars in Figure~\ref{fig:iae}.
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.88\textwidth]{figures/robustness_bars.png}
-  \caption{IAE under model mismatch. MPC remains lowest even against a PID retuned on the mismatched plant.}
+  \caption{IAE under model mismatch. MPC stays lowest even against a PID retuned on the mismatched plant.}
   \label{fig:rob}
 \end{figure}
 
 \section{Discussion and limitations}
-The retuned MPC is the better controller for this constrained heater on the evidence that matters for a coil with a legal operating window: lowest tracking IAE on setpoint, power-limit, and mismatch tests (Figures~\ref{fig:iae}--\ref{fig:traces}); fastest settling on every scenario in Table~\ref{tab:summary}; zero violations wherever limits bind (Figure~\ref{fig:viol}); and a clear robustness margin when the plant drifts away from the model the PID was tuned on (Figure~\ref{fig:rob}).
+For a coil that must stay inside a legal power window, the retuned MPC is the better controller.
+It has the lowest tracking IAE on setpoint, power-limit, and mismatch tests (Figures~\ref{fig:iae}--\ref{fig:traces}), the fastest settling on every row in Table~\ref{tab:summary}, zero violations when limits bind (Figure~\ref{fig:viol}), and a clear edge when the plant drifts from the model used to tune the PID (Figure~\ref{fig:rob}).
 
 Two IAE rows still favour scenario-tuned optimised PID: disturbance rejection (\(586\) vs MPC \(596\)) and the ambient step (\(578\) vs \(641\)).
-Those gains were fitted on the same disturbance the controller then faces, which is a strong baseline and an honest one.
+Those gains were fitted on the same disturbance the controller then faces, so this is a strong and fair baseline.
 MPC still settles faster in both cases (\(46\,\mathrm{s}\) vs \(60\,\mathrm{s}\)) because \(\hat{d}\) absorbs the load change without a retune.
-Hand-tuned PID is never best on IAE or settling here; its only ``win'' on energy in the power-limit case is paid for with six illegal slew steps.
+Hand-tuned PID is never best on IAE or settling here; its only ``win'' on energy in the power-limit case comes with six illegal slew steps.
 
-Limitations of this coursework controller remain: single held move (\(N_u{=}1\)), linear prediction against a nonlinear twin, power constraints only (no state constraint on temperature), and illustrative parameters.
-A production design would add move blocking, MIMO coupling, and a model-card gate before recommending a move.
-The Streamlit lab is a teaching surface, not a PLC programme.
+This coursework controller still has limits: only one free move (\(N_u{=}1\)), a linear predictor against a nonlinear plant, power constraints only (no temperature constraint), and illustrative parameters.
+A production design would add move blocking, multi-input coupling, and a clearer model check before recommending a move.
+The Streamlit lab is for teaching, not a PLC programme.
 
 \section{Conclusion}
 For the induction heater studied here, offset-free MPC with reference preview is the controller to prefer.
-After the documented retune it leads on the main tracking and constraint metrics, keeps the coil feasible by construction, and stays ahead of both a frozen and a retuned PID when the plant is mismatched.
-Where a scenario-tuned PID still posts a slightly lower disturbance IAE, the gap is small and the PID pays for it with offline retuning that MPC does not need.
-The retuned knobs (\(N{=}40\), \(Q_t{=}50\), preview on) are the defaults used for the figures in this report.
+After the retune it leads on the main tracking and constraint metrics, keeps the coil inside limits by design, and stays ahead of both a frozen and a retuned PID when the plant is mismatched.
+Where a scenario-tuned PID still posts a slightly lower disturbance IAE, the gap is small, and that PID needs offline retuning that MPC does not.
+The retuned settings (\(N{=}40\), \(Q_t{=}50\), preview on) are the defaults used for the figures in this report.
 
 \enlargethispage{4\baselineskip}
 \vspace{-0.6em}
