@@ -33,7 +33,7 @@ streamlit run app.py
 ### Deploy
 
 - **Streamlit Community Cloud** — full interactive lab (`app.py` + `requirements.txt`).
-- **Vercel** — static mirror under `web/` (same charts/presets from precomputed `data/ui`). Streamlit itself does not run on Vercel, so deploy the static site from `web/`:
+- **Vercel** — static mirror under `web/` (same charts/presets from precomputed `data/ui`). Streamlit itself does not run on Vercel, so deploy from the `web/` folder (a separate Vercel project that is **not** set to Python):
 
 ```bash
 python scripts/sync_web_data.py
@@ -41,7 +41,7 @@ cd web
 vercel --prod
 ```
 
-Or on Windows: `powershell -File scripts/deploy_vercel.ps1`. In the Vercel project settings, set **Root Directory** to `web` so Vercel does not treat root `app.py` as a Python serverless entry.
+Live static deploy: [web-six-gamma-97x4joejhv.vercel.app](https://web-six-gamma-97x4joejhv.vercel.app/). Do not run `vercel` from the repo root against the Python-linked `model-predictive-control` project — that path still expects an ASGI/`app` export.
 
 ## Interactive app
 
