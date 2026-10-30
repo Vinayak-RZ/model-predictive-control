@@ -33,6 +33,10 @@ streamlit run app.py
 ### Deploy
 
 - **Streamlit Community Cloud** — full interactive lab (`app.py` + `requirements.txt`).
+  In **Advanced settings**, set **Python version to 3.12** (not 3.13/3.14). Newer Pythons
+  lack wheels for numpy/scipy, so Cloud builds them from source and the deploy hangs on
+  “Building numpy / scipy / pandas…”. To change Python after deploy: delete the app and
+  redeploy with 3.12 selected.
 - **Vercel** — static mirror under `web/` (same charts/presets from precomputed `data/ui`). Streamlit itself does not run on Vercel, so deploy from the `web/` folder (a separate Vercel project that is **not** set to Python):
 
 ```bash

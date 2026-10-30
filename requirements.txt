@@ -1,4 +1,6 @@
-# Runtime dependencies for MPC + heater coursework demo (Streamlit Community Cloud).
+# Runtime deps for Streamlit Community Cloud.
+# Deploy with Advanced settings → Python 3.12 (not 3.13/3.14).
+# On 3.14, pip builds numpy/scipy/pandas from source and the install hangs.
 numpy==2.2.6
 scipy==1.15.3
 casadi==3.8.2
@@ -6,4 +8,3 @@ matplotlib==3.10.3
 plotly==6.1.2
 streamlit==1.45.1
 pandas==2.2.3
-pytest==8.3.5
