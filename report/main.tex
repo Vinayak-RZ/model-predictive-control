@@ -48,12 +48,20 @@ Optimised PID still edges MPC on two disturbance IAE numbers when it is retuned 
 The verdict for this constrained heater is that MPC is the better controller: it keeps the coil inside the power window and slew limit by construction, recovers faster after mismatch, and no longer trails a scenario-tuned PID on the main tracking metrics once the horizon is allowed to see the future setpoint.
 \end{abstract}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.92\textwidth]{figures/mpc-infographic.png}
+  \caption{Model predictive control loop: optimisation over predicted states and inputs, simulation model inside the horizon, and plant feedback with disturbance \(\theta(t)\).}
+  \label{fig:mpc-loop}
+\end{figure}
+
 \section{Introduction}
 Induction heaters are slow thermal plants with hard coil-power and slew limits.
 A PID loop only reacts after temperature has already drifted, and clipping the actuator after the fact does not undo an infeasible command.
 MPC uses a model to anticipate the temperature trajectory under candidate power profiles, re-optimises every sample (receding horizon), and can treat window and rate limits as hard constraints inside the optimiser~\cite{rawlings2017,camacho2013}.
+Figure~\ref{fig:mpc-loop} summarises that loop: an optimiser rolls a simulation model over a finite horizon, applies only the first optimal move to the plant, and closes with measured state feedback.
 
-The project implements that idea for coursework: an identified discrete linear model with an integrating disturbance estimate~\cite{pannocchia2003}, a SciPy quadratic programme, a CasADi heater twin as the truth plant, batch metrics, a three-screen Streamlit lab, and an animation driven by the same simulation JSON.
+The project implements that idea for coursework: an identified discrete linear model with an integrating disturbance estimate~\cite{pannocchia2003}, a SciPy quadratic programme, a CasADi heater twin as the truth plant, batch metrics, and a three-screen Streamlit lab.
 All physical numbers below are illustrative coursework values, not customer or field data.
 
 The question answered here is practical: after an honest retune of the MPC knobs (documented in Section~\ref{sec:retune}), and with an optimised PID that is allowed to see each scenario during tuning, which controller should run this constrained heater?
@@ -112,58 +120,30 @@ MPC, hand-tuned PID, and optimised PID all drive the same CasADi twin and are sc
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.88\textwidth]{figures/architecture.png}
+  \includegraphics[width=0.95\textwidth]{figures/architecture.png}
   \caption{Simulation architecture: offset-free MPC and both PID variants act on one heater twin.}
   \label{fig:arch}
 \end{figure}
 
-The repository also ships a multipage Streamlit lab (Playground, Step-through, Scorecard) and an HyperFrames animation built from exported simulation JSON.
-Figure~\ref{fig:ui} shows those screens and the video poster as used in the project README.
+The repository also ships a multipage Streamlit lab (Playground, Step-through, Scorecard) driven by the same simulation presets used for the batch metrics below.
+Figure~\ref{fig:ui} shows those three screens.
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[t]{0.30\textwidth}
+  \begin{subfigure}[t]{0.32\textwidth}
     \includegraphics[width=\linewidth]{figures/streamlit-playground.png}
     \caption{Playground}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.30\textwidth}
+  \begin{subfigure}[t]{0.32\textwidth}
     \includegraphics[width=\linewidth]{figures/streamlit-step-through.png}
     \caption{Step-through}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.30\textwidth}
+  \begin{subfigure}[t]{0.32\textwidth}
     \includegraphics[width=\linewidth]{figures/streamlit-scorecard.png}
     \caption{Scorecard}
   \end{subfigure}
-
-  \vspace{0.4em}
-  \begin{subfigure}[t]{0.455\textwidth}
-    \includegraphics[width=\linewidth]{figures/video-poster.png}
-    \caption{Showcase video poster}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.455\textwidth}
-    \includegraphics[width=\linewidth]{figures/demo-preview-frame.png}
-    \caption{Animation preview frame}
-  \end{subfigure}
-  \caption{Interactive lab screens and animation assets from the project README.}
+  \caption{Interactive lab screens used to inspect MPC against both PID baselines.}
   \label{fig:ui}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \begin{subfigure}[t]{0.30\textwidth}
-    \includegraphics[width=\linewidth]{figures/streamlit-scenario-controls.png}
-    \caption{Scenario controls}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.30\textwidth}
-    \includegraphics[width=\linewidth]{figures/streamlit-comparison-plots.png}
-    \caption{Comparison plots}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.30\textwidth}
-    \includegraphics[width=\linewidth]{figures/streamlit-metrics-table.png}
-    \caption{Metrics table}
-  \end{subfigure}
-  \caption{Additional Streamlit lab screens from \texttt{docs/} (scenario controls, live comparison plots, metrics table).}
-  \label{fig:ui2}
 \end{figure}
 
 \subsection{Retuned MPC parameters}
@@ -192,7 +172,7 @@ Setpoint-tracking IAE & 1824.3 & 1044.3 \\
 \label{tab:retune}
 \end{table}
 
-These knobs live in the working copy under \texttt{/workspace/mpc-report-work}; they are not committed to the GitHub repository in this pass.
+These knobs live in the repository defaults under \texttt{src/mpc\_core/} (\texttt{mpc.py}, \texttt{sim/config.py}).
 
 \section{Experimental setup}
 Sample time \(\Delta t{=}1\,\mathrm{s}\).
@@ -239,37 +219,37 @@ Ambient step & IAE & 641.2 & 1092.4 & 578.3 \\
 \end{tabular}
 \end{table}
 
-Figure~\ref{fig:iae} summarises IAE; hatched bars are MPC wins.
-Figure~\ref{fig:traces} shows the four primary time responses.
+Figure~\ref{fig:iae} summarises IAE; hatched bars are MPC wins and match the ranking in Table~\ref{tab:summary}.
+Figure~\ref{fig:traces} shows the four primary time responses used for that table: MPC reaches the \(120\,\unitC\) step first on setpoint tracking, stays feasible under the tight power cap, and recovers cleanly under mismatch, while optimised PID remains competitive on the heat-loss disturbance.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.82\textwidth]{figures/iae_bars.png}
+  \includegraphics[width=0.95\textwidth]{figures/iae_bars.png}
   \caption{IAE by scenario. Hatched bars mark where MPC is lowest.}
   \label{fig:iae}
 \end{figure}
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[t]{0.455\textwidth}
+  \begin{subfigure}[t]{0.48\textwidth}
     \includegraphics[width=\linewidth]{figures/setpoint_tracking.png}
     \caption{Setpoint tracking}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.455\textwidth}
+  \begin{subfigure}[t]{0.48\textwidth}
     \includegraphics[width=\linewidth]{figures/disturbance_rejection.png}
     \caption{Disturbance rejection}
   \end{subfigure}
 
   \vspace{0.35em}
-  \begin{subfigure}[t]{0.455\textwidth}
+  \begin{subfigure}[t]{0.48\textwidth}
     \includegraphics[width=\linewidth]{figures/power_constraints.png}
     \caption{Power limits}
   \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.455\textwidth}
+  \begin{subfigure}[t]{0.48\textwidth}
     \includegraphics[width=\linewidth]{figures/model_mismatch.png}
     \caption{Model mismatch}
   \end{subfigure}
-  \caption{Temperature and coil power for MPC, PID, and optimised PID.}
+  \caption{Temperature and coil power for MPC, PID, and optimised PID (aligned with Table~\ref{tab:summary}).}
   \label{fig:traces}
 \end{figure}
 
@@ -277,51 +257,45 @@ Figure~\ref{fig:traces} shows the four primary time responses.
 On the aggressive \(165\,\unitC\) request under a \(150\,\mathrm{kW}\) / \(8\,\mathrm{kW\,s^{-1}}\) ceiling, hand-tuned PID records \textbf{six} slew violations and a slightly lower energy only because those infeasible moves are allowed.
 MPC and optimised PID stay at zero violations; MPC also posts the lowest IAE (\(8727\)).
 Figure~\ref{fig:viol} makes the violation gap visible.
+Ambient-step IAE and settling in Table~\ref{tab:summary} follow the same disturbance pattern as Figure~\ref{fig:traces}(b): optimised PID edges IAE after a scenario retune, while MPC still settles faster via \(\hat{d}\).
 
 \begin{figure}[H]
   \centering
-  \begin{subfigure}[t]{0.46\textwidth}
-    \includegraphics[width=\linewidth]{figures/violations_power.png}
-    \caption{Violation counts}
-  \end{subfigure}\hfill
-  \begin{subfigure}[t]{0.50\textwidth}
-    \includegraphics[width=\linewidth]{figures/ambient_step.png}
-    \caption{Ambient-step traces}
-  \end{subfigure}
-  \caption{Power-limit violations (left) and ambient disturbance response (right).}
+  \includegraphics[width=0.72\textwidth]{figures/violations_power.png}
+  \caption{Constraint-violation counts on the power-limit scenario (PID records six slew breaches; MPC and optimised PID stay feasible).}
   \label{fig:viol}
 \end{figure}
 
 \subsection{Robustness}
-When optimised-PID gains from the nominal setpoint test are frozen and the mismatched plant is substituted, IAE rises to \(1701.8\).
-MPC on the same mismatched plant stays at \(1214.2\).
-Even the oracle PID retuned on the mismatch itself only reaches \(1666.6\).
-Figure~\ref{fig:rob} shows the comparison.
+When optimised-PID gains from the nominal setpoint test are frozen and the mismatched plant is substituted, IAE rises to \(1702\).
+MPC on the same mismatched plant stays at \(1214\).
+Even the oracle PID retuned on the mismatch itself only reaches \(1667\).
+Figure~\ref{fig:rob} shows the comparison and matches the mismatch column of Figure~\ref{fig:iae}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.55\textwidth]{figures/robustness_bars.png}
+  \includegraphics[width=0.88\textwidth]{figures/robustness_bars.png}
   \caption{IAE under model mismatch. MPC remains lowest even against a PID retuned on the mismatched plant.}
   \label{fig:rob}
 \end{figure}
 
 \section{Discussion and limitations}
-The retuned MPC is the better controller for this constrained heater on the evidence that matters for a coil with a legal operating window: lowest tracking IAE on setpoint, power-limit, and mismatch tests; fastest settling on every scenario in Table~\ref{tab:summary}; zero violations wherever limits bind; and a clear robustness margin when the plant drifts away from the model the PID was tuned on.
+The retuned MPC is the better controller for this constrained heater on the evidence that matters for a coil with a legal operating window: lowest tracking IAE on setpoint, power-limit, and mismatch tests (Figures~\ref{fig:iae}--\ref{fig:traces}); fastest settling on every scenario in Table~\ref{tab:summary}; zero violations wherever limits bind (Figure~\ref{fig:viol}); and a clear robustness margin when the plant drifts away from the model the PID was tuned on (Figure~\ref{fig:rob}).
 
-Two IAE rows still favour scenario-tuned optimised PID: disturbance rejection (\(585.8\) vs MPC \(596.0\)) and the ambient step (\(578.3\) vs \(641.2\)).
+Two IAE rows still favour scenario-tuned optimised PID: disturbance rejection (\(586\) vs MPC \(596\)) and the ambient step (\(578\) vs \(641\)).
 Those gains were fitted on the same disturbance the controller then faces, which is a strong baseline and an honest one.
 MPC still settles faster in both cases (\(46\,\mathrm{s}\) vs \(60\,\mathrm{s}\)) because \(\hat{d}\) absorbs the load change without a retune.
 Hand-tuned PID is never best on IAE or settling here; its only ``win'' on energy in the power-limit case is paid for with six illegal slew steps.
 
 Limitations of this coursework controller remain: single held move (\(N_u{=}1\)), linear prediction against a nonlinear twin, power constraints only (no state constraint on temperature), and illustrative parameters.
 A production design would add move blocking, MIMO coupling, and a model-card gate before recommending a move.
-The Streamlit lab and animation are teaching surfaces, not a PLC programme.
+The Streamlit lab is a teaching surface, not a PLC programme.
 
 \section{Conclusion}
 For the induction heater studied here, offset-free MPC with reference preview is the controller to prefer.
 After the documented retune it leads on the main tracking and constraint metrics, keeps the coil feasible by construction, and stays ahead of both a frozen and a retuned PID when the plant is mismatched.
 Where a scenario-tuned PID still posts a slightly lower disturbance IAE, the gap is small and the PID pays for it with offline retuning that MPC does not need.
-The working-copy knobs (\(N{=}40\), \(Q_t{=}50\), preview on) are ready to push to the course repository once reviewed.
+The retuned knobs (\(N{=}40\), \(Q_t{=}50\), preview on) are the defaults used for the figures in this report.
 
 \enlargethispage{4\baselineskip}
 \vspace{-0.6em}
