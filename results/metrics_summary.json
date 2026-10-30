@@ -1,12 +1,12 @@
 {
   "setpoint_tracking": {
     "mpc": {
-      "iae": 1824.3047261019337,
-      "ise": 42990.91050867044,
-      "overshoot_pct": 2.8464316641024823,
-      "settling_time_s": 101.0,
+      "iae": 1044.2820693337767,
+      "ise": 12908.05307595536,
+      "overshoot_pct": 2.2583790053824395,
+      "settling_time_s": 73.0,
       "constraint_violation_steps": 0,
-      "energy_kwh": 5.7946690675964785
+      "energy_kwh": 5.692411663573329
     },
     "pid": {
       "iae": 2476.8821562098565,
@@ -32,12 +32,12 @@
   },
   "disturbance_rejection": {
     "mpc": {
-      "iae": 954.945487365502,
-      "ise": 10775.527556428442,
-      "overshoot_pct": 2.932138930683006,
-      "settling_time_s": 62.0,
+      "iae": 595.9937995571544,
+      "ise": 3647.8075814637286,
+      "overshoot_pct": 2.3220510684445648,
+      "settling_time_s": 46.0,
       "constraint_violation_steps": 0,
-      "energy_kwh": 3.812089722128319
+      "energy_kwh": 3.712070861735674
     },
     "pid": {
       "iae": 1089.8586926836206,
@@ -63,12 +63,12 @@
   },
   "power_constraints": {
     "mpc": {
-      "iae": 9480.125331794081,
-      "ise": 534281.768932827,
+      "iae": 8727.374848897893,
+      "ise": 459551.6805878572,
       "overshoot_pct": 0.0,
       "settling_time_s": 199.0,
       "constraint_violation_steps": 0,
-      "energy_kwh": 7.745902377532467
+      "energy_kwh": 8.296666666666667
     },
     "pid": {
       "iae": 9153.317475280775,
@@ -94,12 +94,12 @@
   },
   "model_mismatch": {
     "mpc": {
-      "iae": 2009.0488586178149,
-      "ise": 48622.77772242376,
-      "overshoot_pct": 2.885450541648057,
-      "settling_time_s": 111.0,
+      "iae": 1214.2039156916264,
+      "ise": 16957.227969694195,
+      "overshoot_pct": 2.466450337007385,
+      "settling_time_s": 83.0,
       "constraint_violation_steps": 0,
-      "energy_kwh": 6.699708905338507
+      "energy_kwh": 6.6116685088535
     },
     "pid": {
       "iae": 2541.178920880652,
@@ -121,6 +121,37 @@
       "kp": 0.6684617863226037,
       "ki": 0.013678334405339282,
       "kd": 7.299804604346114e-07
+    }
+  },
+  "ambient_step": {
+    "mpc": {
+      "iae": 641.2234115309344,
+      "ise": 3805.7769742870855,
+      "overshoot_pct": 2.366273012717979,
+      "settling_time_s": 46.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 3.7086445917925124
+    },
+    "pid": {
+      "iae": 1092.3994321489529,
+      "ise": 13610.724682934548,
+      "overshoot_pct": 0.0,
+      "settling_time_s": 102.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 3.4638184780412633
+    },
+    "optimized_pid": {
+      "iae": 578.3330036106918,
+      "ise": 7751.0521587780995,
+      "overshoot_pct": 0.23556681801645266,
+      "settling_time_s": 60.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 3.505371997137554
+    },
+    "optimized_pid_gains": {
+      "kp": 1.1425104846256524,
+      "ki": 0.03291986956092894,
+      "kd": 0.17376091075908562
     }
   }
 }

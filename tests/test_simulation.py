@@ -43,3 +43,23 @@ def test_compute_metrics_basic() -> None:
     )
     assert m.iae >= 0.0
     assert m.ise >= 0.0
+
+
+def test_mpc_preview_path_runs() -> None:
+    from mpc_core.sim.config import default_demo_config
+    from mpc_core.sim.scenarios import SCENARIOS
+    from mpc_core.sim.simulate import RunOptions, run_closed_loop
+
+    cfg = default_demo_config()
+    sc = SCENARIOS["setpoint_tracking"]
+    # Short run via options if supported; otherwise rely on full scenario.
+    r = run_closed_loop(
+        sc,
+        controller="mpc",
+        cfg=cfg,
+        options=RunOptions(noise_seed=0),
+        mpc_preview=True,
+        mpc_terminal_weight=cfg.terminal_weight,
+    )
+    assert r.metrics.iae > 0.0
+    assert r.metrics.constraint_violation_steps == 0

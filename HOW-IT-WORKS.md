@@ -96,11 +96,15 @@ The prediction horizon is `horizon_steps`. The control move is a single held
 value for that whole horizon (control horizon effectively one block of length
 `horizon_steps`).
 
-Illustrative values used in tests and the demo:
+Illustrative values used in the lab defaults (`default_demo_config`):
 
-- `horizon_steps = 20` in the core solve test and demo loop
-- `solver_time_limit_s = 2.0` in those same places
+- `horizon_steps = 40` (power-limit scenario overrides to 45)
+- `terminal_weight = 50` (terminal tracking penalty on the last predicted step)
+- `control_horizon = 1`, `move_weight = 0` (single held move; L-BFGS-B)
+- reference preview on in `run_closed_loop` (`mpc_preview=True`)
+- `solver_time_limit_s = 2.0`
 
+Core unit tests may still call `solve(...)` with a shorter horizon (for example 20).
 `horizon_steps` must be an integer at least 1.
 
 ## Tuning (what the code exposes)
@@ -108,14 +112,18 @@ Illustrative values used in tests and the demo:
 | Knob | Where | Notes |
 | --- | --- | --- |
 | `a`, `b`, `dt_s` | `IdentifiedLinearModel` | From identification; refused if `b == 0` |
-| `horizon_steps` | `solve(...)` | Positive integer |
+| `horizon_steps` | `solve(...)` / `DemoConfig` | Positive integer; lab default 40 |
+| `y_ref` or `y_ref_traj` | `solve(...)` | Scalar reference or length-`N` preview trajectory |
+| `terminal_weight` | `solve(...)` / `DemoConfig` | Extra weight on the last step error; lab default 50 |
+| `move_weight` | `solve(...)` / `DemoConfig` | Penalty on input moves when `control_horizon > 1` |
+| `observer_gain` | `solve(...)` / simulator | Scales the `d_hat` innovation update; lab default 1.0 |
 | `solver_time_limit_s` | `solve(...)` | Soft deadline via `MpcTimedOut` |
 | `low`, `high`, `max_step` | `SetpointLimits` | Passed in by caller |
-| `y_ref` | `solve(...)` | Controlled-variable reference |
 | Model card | `model_card.py` | Optional gate: held-out residual under `max_held_out_rms`, `b != 0` |
 
-There is no move suppression weight and no separate observer gain: the
-disturbance update is a full innovation correction.
+Reference preview feeds the upcoming setpoint trajectory into the predictor so the
+held move can rise before a step arrives. Offset-free `d_hat` still applies a
+(gain-scaled) innovation correction each sample.
 
 ## CasADi plant twin (heater)
 

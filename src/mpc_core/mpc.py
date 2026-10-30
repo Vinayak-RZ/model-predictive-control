@@ -1,13 +1,10 @@
-"""Offset-free MPC on an identified linear model (W5.1, shadow).
+"""Offset-free MPC on an identified linear model.
 
 Integrating disturbance per Pannocchia and Rawlings (2003). The disturbance is
-refreshed each run from the one-step innovation (full correction, no separate
-observer gain). The quadratic programme tracks a CV reference under the line-pack
-window and max-step; there is no move-weight term so nothing is invented.
-Decision variables are successive input increments (move blocking): ``n_u`` free
-moves, then the last input is held for the rest of the horizon. Only the first
-move is applied. Horizon and solver time limit come from the caller. Nothing
-here writes to a plant.
+refreshed each run from the one-step innovation, scaled by an optional observer
+gain. The quadratic programme tracks a CV reference (with optional preview)
+under window and rate limits, with a free control horizon, move penalty, and
+terminal cost. Nothing here writes to a plant.
 """
 
 from __future__ import annotations
@@ -22,11 +19,6 @@ from scipy.optimize import minimize
 
 from mpc_core.identified import IdentifiedLinearModel
 from mpc_core.thresholds import SetpointLimits
-
-# Default: one free move held across the horizon (fast, strong on this plant).
-# Callers may raise n_u for a richer plan; rate limits stay hard via Δu bounds.
-_DEFAULT_N_U = 1
-_TERMINAL_SCALE = 2.5
 
 
 class MpcTimedOut(Exception):
@@ -50,6 +42,7 @@ class MpcResult:
     predicted_y: list[float]
     active_constraints: list[str]
     state: MpcState
+    planned_u: list[float] | None = None
 
 
 def refresh_disturbance(
@@ -57,40 +50,22 @@ def refresh_disturbance(
     state: MpcState,
     y_meas: float,
     u_current: float,
+    *,
+    observer_gain: float = 1.0,
 ) -> MpcState:
     """Update integrating disturbance from the one-step innovation."""
+    if observer_gain <= 0.0:
+        raise ValueError("observer_gain must be positive")
     if state.last_y is None or state.last_u is None:
-        # Steady-state initialisation: y = a y + b u + d  =>  d = (1-a)y - b u.
         d0 = (1.0 - model.a) * y_meas - model.b * u_current
         return MpcState(d_hat=d0, last_y=y_meas, last_u=u_current)
     y_pred = model.a * state.last_y + model.b * state.last_u + state.d_hat
+    innovation = y_meas - y_pred
     return MpcState(
-        d_hat=state.d_hat + (y_meas - y_pred),
+        d_hat=state.d_hat + observer_gain * innovation,
         last_y=y_meas,
         last_u=u_current,
     )
-
-
-def _deltas_to_sequence(
-    deltas: NDArray[np.float64],
-    u0: float,
-    horizon_steps: int,
-    window_lo: float,
-    window_hi: float,
-) -> NDArray[np.float64]:
-    """Integrate Δu moves, clip to the power window, hold the last free value."""
-    n_u = len(deltas)
-    u_free = np.empty(n_u, dtype=np.float64)
-    u = u0
-    for k, du in enumerate(deltas):
-        u = float(np.clip(u + float(du), window_lo, window_hi))
-        u_free[k] = u
-    if n_u >= horizon_steps:
-        return u_free[:horizon_steps]
-    u_seq = np.empty(horizon_steps, dtype=np.float64)
-    u_seq[:n_u] = u_free
-    u_seq[n_u:] = u_free[-1]
-    return u_seq
 
 
 def _simulate(
@@ -101,12 +76,24 @@ def _simulate(
 ) -> NDArray[np.float64]:
     y = y0
     out = np.empty(len(u_seq), dtype=np.float64)
-    a = float(model.a)
-    b = float(model.b)
     for i, u in enumerate(u_seq):
-        y = a * y + b * float(u) + d_hat
+        y = model.a * y + model.b * float(u) + d_hat
         out[i] = y
     return out
+
+
+def _expand_control_sequence(
+    x: NDArray[np.float64],
+    horizon_steps: int,
+) -> NDArray[np.float64]:
+    """Hold the last free move for the remainder of the prediction horizon."""
+    nu = len(x)
+    if nu >= horizon_steps:
+        return np.asarray(x[:horizon_steps], dtype=np.float64)
+    u_seq = np.empty(horizon_steps, dtype=np.float64)
+    u_seq[:nu] = x
+    u_seq[nu:] = x[-1]
+    return u_seq
 
 
 def solve(
@@ -119,83 +106,109 @@ def solve(
     time_limit_s: float,
     state: MpcState,
     tracking_weight: float = 1.0,
-    n_u_moves: int | None = None,
+    *,
+    control_horizon: int | None = None,
+    move_weight: float = 0.0,
+    terminal_weight: float = 0.0,
+    y_ref_traj: Sequence[float] | None = None,
+    observer_gain: float = 1.0,
 ) -> MpcResult:
-    """SISO offset-free QP over ``horizon_steps``; returns the first-move proposal."""
+    """SISO offset-free QP; returns the first-move proposal (receding horizon)."""
     if horizon_steps < 1:
         raise ValueError("horizon_steps must be at least 1")
     if len(limits) != 1:
         raise ValueError("identified_linear offset-free MPC is SISO in W5.1")
+    if tracking_weight < 0.0 or move_weight < 0.0 or terminal_weight < 0.0:
+        raise ValueError("weights must be non-negative")
     lim = limits[0]
     sp = lim.setpoint_id
     u0 = float(current[sp])
-    st = refresh_disturbance(model, state, y_meas, u0)
-    window_lo = float(lim.low)
-    window_hi = float(lim.high)
-    du_max = float(lim.max_step)
-    if window_lo > window_hi:
-        raise ValueError("empty power window")
-    first_lo = max(window_lo, u0 - du_max)
-    first_hi = min(window_hi, u0 + du_max)
-    if first_lo > first_hi:
-        raise ValueError("no feasible setting within one step of the current setting")
+    st = refresh_disturbance(
+        model, state, y_meas, u0, observer_gain=observer_gain
+    )
+    nu = control_horizon if control_horizon is not None else 1
+    if nu < 1:
+        raise ValueError("control_horizon must be at least 1")
+    nu = min(nu, horizon_steps)
 
-    h = int(horizon_steps)
-    n_u = int(n_u_moves) if n_u_moves is not None else _DEFAULT_N_U
-    n_u = max(1, min(n_u, h))
-    term_start = max(0, (2 * h) // 3)
+    if y_ref_traj is None:
+        ref = np.full(horizon_steps, float(y_ref), dtype=np.float64)
+    else:
+        if len(y_ref_traj) < horizon_steps:
+            raise ValueError("y_ref_traj must cover horizon_steps")
+        ref = np.asarray(y_ref_traj[:horizon_steps], dtype=np.float64)
+
+    # Box on absolute power; rate limits enforced as SLSQP inequalities.
+    bounds = [(lim.low, lim.high)] * nu
+    lo0 = max(lim.low, u0 - lim.max_step)
+    hi0 = min(lim.high, u0 + lim.max_step)
+    if lo0 > hi0:
+        raise ValueError("no feasible setting within one step of the current setting")
+    bounds[0] = (lo0, hi0)
 
     deadline = time.monotonic() + time_limit_s
+    max_step = float(lim.max_step)
 
     def f(x: NDArray[np.float64]) -> float:
         if time.monotonic() > deadline:
             raise MpcTimedOut()
-        deltas = np.asarray(x, dtype=np.float64)
-        u_seq = _deltas_to_sequence(deltas, u0, h, window_lo, window_hi)
+        u_seq = _expand_control_sequence(x, horizon_steps)
         ys = _simulate(model, y_meas, st.d_hat, u_seq)
-        err = ys - y_ref
-        weights = np.ones(h, dtype=np.float64)
-        weights[term_start:] = _TERMINAL_SCALE
-        return tracking_weight * float(np.dot(weights, err * err))
+        track = tracking_weight * float(np.sum((ys - ref) ** 2))
+        term = terminal_weight * float((ys[-1] - ref[-1]) ** 2)
+        if move_weight == 0.0:
+            move = 0.0
+        else:
+            du = np.diff(u_seq, prepend=u0)
+            move = move_weight * float(np.sum(du**2))
+        return track + term + move
 
-    bounds = [(-du_max, du_max)] * n_u
+    cons = []
+    # |u[i] - u[i-1]| <= max_step  for i = 1..nu-1
+    for i in range(1, nu):
+        cons.append(
+            {
+                "type": "ineq",
+                "fun": (lambda x, i=i: max_step - (x[i] - x[i - 1])),
+            }
+        )
+        cons.append(
+            {
+                "type": "ineq",
+                "fun": (lambda x, i=i: max_step - (x[i - 1] - x[i])),
+            }
+        )
 
-    if abs(model.b) < 1e-12:
-        u_ss = u0
-    else:
-        u_ss = ((1.0 - model.a) * y_ref - st.d_hat) / model.b
-    u_ss = float(np.clip(u_ss, window_lo, window_hi))
-    x0 = np.zeros(n_u, dtype=np.float64)
-    remaining = u_ss - u0
-    for k in range(n_u):
-        step = float(np.clip(remaining, -du_max, du_max))
-        x0[k] = step
-        remaining -= step
-
+    x0 = np.full(nu, float(np.clip(u0, lo0, hi0)), dtype=np.float64)
+    method = "SLSQP" if nu > 1 else "L-BFGS-B"
     res = minimize(
         f,
         x0,
-        method="L-BFGS-B",
+        method=method,
         bounds=bounds,
-        options={"maxiter": 80, "ftol": 1e-12},
+        constraints=cons if nu > 1 else (),
+        options={"maxiter": 60, "ftol": 1e-9},
     )
-    deltas = np.asarray(res.x, dtype=np.float64)
-    u_seq = _deltas_to_sequence(deltas, u0, h, window_lo, window_hi)
-    u_star = float(np.clip(u_seq[0], first_lo, first_hi))
-    u_seq = u_seq.copy()
+    x_star = np.asarray(res.x, dtype=np.float64)
+    # Project first move into the one-step feasible set (numerical safety).
+    u_star = float(np.clip(x_star[0], lo0, hi0))
+    x_star = x_star.copy()
+    x_star[0] = u_star
+    u_seq = _expand_control_sequence(x_star, horizon_steps)
     u_seq[0] = u_star
     ys = _simulate(model, y_meas, st.d_hat, u_seq)
     active: list[str] = []
     if np.isclose(u_star, lim.low) or np.isclose(u_star, lim.high):
         active.append(f"{sp}.window")
-    if np.isclose(abs(u_star - u0), lim.max_step):
+    elif np.isclose(abs(u_star - u0), lim.max_step):
         active.append(f"{sp}.max_step")
     st_out = MpcState(d_hat=st.d_hat, last_y=y_meas, last_u=u_star)
     return MpcResult(
         best={sp: u_star},
-        y_ref=y_ref,
+        y_ref=float(y_ref),
         d_hat=st.d_hat,
         predicted_y=[float(v) for v in ys],
         active_constraints=active,
         state=st_out,
+        planned_u=[float(v) for v in u_seq],
     )

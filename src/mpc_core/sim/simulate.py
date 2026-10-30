@@ -96,6 +96,11 @@ def run_closed_loop(
     options: RunOptions | None = None,
     pid_gains: PIDGains | None = None,
     mpc_tracking_weight: float = 1.0,
+    mpc_control_horizon: int | None = None,
+    mpc_move_weight: float = 0.0,
+    mpc_terminal_weight: float = 0.0,
+    mpc_observer_gain: float = 1.0,
+    mpc_preview: bool = True,
     result_label: str | None = None,
 ) -> SimulationResult:
     cfg = cfg or default_demo_config()
@@ -121,6 +126,16 @@ def run_closed_loop(
     h = horizon_steps if horizon_steps is not None else (
         scenario.mpc_horizon if scenario.mpc_horizon else cfg.horizon_steps
     )
+    if mpc_control_horizon is None:
+        mpc_control_horizon = getattr(cfg, "control_horizon", 1)
+    if mpc_move_weight == 0.0 and getattr(cfg, "move_weight", 0.0) != 0.0:
+        mpc_move_weight = cfg.move_weight
+    if mpc_terminal_weight == 0.0 and getattr(cfg, "terminal_weight", 0.0) != 0.0:
+        mpc_terminal_weight = cfg.terminal_weight
+    if mpc_observer_gain == 1.0 and getattr(cfg, "observer_gain", 1.0) != 1.0:
+        mpc_observer_gain = cfg.observer_gain
+    if mpc_tracking_weight == 1.0 and getattr(cfg, "tracking_weight", 1.0) != 1.0:
+        mpc_tracking_weight = cfg.tracking_weight
     model = _mpc_model(cfg, opt)
 
     rng = np.random.default_rng(opt.noise_seed)
@@ -152,6 +167,15 @@ def run_closed_loop(
 
         if controller == "mpc":
             t0 = time.perf_counter()
+            if mpc_preview:
+                ref_traj = [float(v) for v in y_ref[k : k + h]]
+                if len(ref_traj) < h:
+                    ref_traj = ref_traj + [ref_traj[-1]] * (h - len(ref_traj))
+            else:
+                ref_traj = None
+            nu = mpc_control_horizon if mpc_control_horizon is not None else getattr(
+                cfg, "control_horizon", None
+            )
             result = solve(
                 model,
                 [limits],
@@ -162,6 +186,11 @@ def run_closed_loop(
                 time_limit_s=cfg.solver_time_limit_s,
                 state=mpc_state,
                 tracking_weight=mpc_tracking_weight,
+                control_horizon=nu,
+                move_weight=mpc_move_weight,
+                terminal_weight=mpc_terminal_weight,
+                y_ref_traj=ref_traj,
+                observer_gain=mpc_observer_gain,
             )
             solve_ms.append((time.perf_counter() - t0) * 1000.0)
             u = float(np.clip(result.best[limits.setpoint_id], limits.low, limits.high))
@@ -272,6 +301,9 @@ def run_mpc_step_log(
             plant = apply_disturbance_event(plant, scenario.disturbance_event)
 
         t0 = time.perf_counter()
+        ref_traj = [float(v) for v in y_ref[k : k + h]]
+        if len(ref_traj) < h:
+            ref_traj = ref_traj + [ref_traj[-1]] * (h - len(ref_traj))
         result = solve(
             model,
             [limits],
@@ -281,7 +313,12 @@ def run_mpc_step_log(
             horizon_steps=h,
             time_limit_s=cfg.solver_time_limit_s,
             state=mpc_state,
-            tracking_weight=1.0,
+            tracking_weight=getattr(cfg, "tracking_weight", 1.0),
+            control_horizon=getattr(cfg, "control_horizon", 1),
+            move_weight=getattr(cfg, "move_weight", 0.0),
+            terminal_weight=getattr(cfg, "terminal_weight", 0.0),
+            y_ref_traj=ref_traj,
+            observer_gain=getattr(cfg, "observer_gain", 1.0),
         )
         ms = (time.perf_counter() - t0) * 1000.0
         u_new = float(np.clip(result.best[limits.setpoint_id], limits.low, limits.high))

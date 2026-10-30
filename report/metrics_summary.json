@@ -1,0 +1,246 @@
+{
+  "mpc_params_retuned": {
+    "horizon_steps": 40,
+    "control_horizon": 1,
+    "terminal_weight": 50.0,
+    "move_weight": 0.0,
+    "observer_gain": 1.0,
+    "tracking_weight": 1.0,
+    "reference_preview": true,
+    "solver": "L-BFGS-B (Nu=1)",
+    "plant": {
+      "m_kg": 800.0,
+      "c_p_j_per_kg_k": 480.0,
+      "eta": 0.82,
+      "U_w_per_k": 45.0,
+      "T_amb_c": 25.0
+    },
+    "model": {
+      "a": 0.978,
+      "b": 0.042,
+      "dt_s": 1.0,
+      "fit_id": "fit-ibh-illustrative",
+      "residual_rms": 0.35
+    },
+    "limits_default_kW": [
+      0.0,
+      250.0,
+      25.0
+    ]
+  },
+  "mpc_params_legacy": {
+    "horizon_steps": 25,
+    "control_horizon": 1,
+    "terminal_weight": 0.0,
+    "move_weight": 0.0,
+    "observer_gain": 1.0,
+    "reference_preview": false,
+    "note": "Matches published metrics_summary.json on the PR branch before retune."
+  },
+  "scenarios": {
+    "setpoint_tracking": {
+      "mpc": {
+        "iae": 1044.2820693337767,
+        "ise": 12908.05307595536,
+        "overshoot_pct": 2.2583790053824395,
+        "settling_time_s": 73.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 5.692411663573329
+      },
+      "pid": {
+        "iae": 2476.8821562098565,
+        "ise": 54108.067221840785,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 179.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 4.882318560184072
+      },
+      "optimized_pid": {
+        "iae": 1466.416576856722,
+        "ise": 33836.921792749476,
+        "overshoot_pct": 0.28606353182650446,
+        "settling_time_s": 99.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 5.419554814358623
+      },
+      "optimized_pid_gains": {
+        "kp": 0.657261661628341,
+        "ki": 0.014324983607382383,
+        "kd": 4.540791857929044e-07
+      },
+      "runtime_s": 9.591939849997289
+    },
+    "disturbance_rejection": {
+      "mpc": {
+        "iae": 595.9937995571544,
+        "ise": 3647.8075814637286,
+        "overshoot_pct": 2.3220510684445648,
+        "settling_time_s": 46.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.712070861735674
+      },
+      "pid": {
+        "iae": 1089.8586926836206,
+        "ise": 13625.714931327868,
+        "overshoot_pct": 0.02508540507785315,
+        "settling_time_s": 103.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.558647442579107
+      },
+      "optimized_pid": {
+        "iae": 585.7930293695631,
+        "ise": 7746.167981686413,
+        "overshoot_pct": 0.36755054346288135,
+        "settling_time_s": 60.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.6072544451168373
+      },
+      "optimized_pid_gains": {
+        "kp": 1.141206723887131,
+        "ki": 0.03346878163509304,
+        "kd": 0.17376049620586614
+      },
+      "runtime_s": 7.116854917003366
+    },
+    "power_constraints": {
+      "mpc": {
+        "iae": 8727.374848897893,
+        "ise": 459551.6805878572,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 199.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 8.296666666666667
+      },
+      "pid": {
+        "iae": 9153.317475280775,
+        "ise": 501731.1292096365,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 199.0,
+        "constraint_violation_steps": 6,
+        "energy_kwh": 7.985763308948222
+      },
+      "optimized_pid": {
+        "iae": 9032.603246382894,
+        "ise": 489472.05569184513,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 199.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 8.073318328502369
+      },
+      "optimized_pid_gains": {
+        "kp": 0.08184810215372447,
+        "ki": 0.0,
+        "kd": 0.02132090520751429
+      },
+      "runtime_s": 4.6095418029944994
+    },
+    "model_mismatch": {
+      "mpc": {
+        "iae": 1214.2039156916264,
+        "ise": 16957.227969694195,
+        "overshoot_pct": 2.466450337007385,
+        "settling_time_s": 83.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 6.6116685088535
+      },
+      "pid": {
+        "iae": 2541.178920880652,
+        "ise": 56591.54745534186,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 167.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 5.781644166181909
+      },
+      "optimized_pid": {
+        "iae": 1666.6483783823721,
+        "ise": 39172.97315308075,
+        "overshoot_pct": 0.2432372511869474,
+        "settling_time_s": 109.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 6.236323710793733
+      },
+      "optimized_pid_gains": {
+        "kp": 0.6684617863226037,
+        "ki": 0.013678334405339282,
+        "kd": 7.299804604346114e-07
+      },
+      "runtime_s": 9.604297742000199
+    },
+    "ambient_step": {
+      "mpc": {
+        "iae": 641.2234115309344,
+        "ise": 3805.7769742870855,
+        "overshoot_pct": 2.366273012717979,
+        "settling_time_s": 46.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.7086445917925124
+      },
+      "pid": {
+        "iae": 1092.3994321489529,
+        "ise": 13610.724682934548,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 102.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.4638184780412633
+      },
+      "optimized_pid": {
+        "iae": 578.3330036106918,
+        "ise": 7751.0521587780995,
+        "overshoot_pct": 0.23556681801645266,
+        "settling_time_s": 60.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.505371997137554
+      },
+      "optimized_pid_gains": {
+        "kp": 1.1425104846256524,
+        "ki": 0.03291986956092894,
+        "kd": 0.17376091075908562
+      },
+      "runtime_s": 8.496293509997486
+    },
+    "robustness_nominal_gains_on_mismatch": {
+      "mpc": {
+        "iae": 1214.2039156916264,
+        "ise": 16957.227969694195,
+        "overshoot_pct": 2.466450337007385,
+        "settling_time_s": 83.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 6.6116685088535
+      },
+      "pid": {
+        "iae": 2541.178920880652,
+        "ise": 56591.54745534186,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 167.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 5.781644166181909
+      },
+      "optimized_pid_nominal_gains": {
+        "iae": 1701.7909518495546,
+        "ise": 39167.7967950831,
+        "overshoot_pct": 1.0151622671830416,
+        "settling_time_s": 108.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 6.354398730952962
+      },
+      "optimized_pid_retuned_on_mismatch": {
+        "iae": 1666.6483783823721,
+        "ise": 39172.97315308075,
+        "overshoot_pct": 0.2432372511869474,
+        "settling_time_s": 109.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 6.236323710793733
+      },
+      "nominal_gains_used": {
+        "kp": 0.657261661628341,
+        "ki": 0.014324983607382383,
+        "kd": 4.540791857929044e-07
+      },
+      "note": "optimized_pid_nominal_gains uses gains tuned on the nominal plant; optimized_pid_retuned_on_mismatch saw the mismatched plant during tuning."
+    }
+  },
+  "legacy_vs_retuned_setpoint_iae": {
+    "legacy_no_preview": 1824.3047174504304,
+    "retuned_preview_N40_Qt50": 1044.2820693337767
+  }
+}
