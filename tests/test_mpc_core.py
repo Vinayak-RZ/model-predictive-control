@@ -98,3 +98,59 @@ def test_identified_rejects_zero_b() -> None:
             residual_rms=0.0,
             experiment="step",
         )
+
+
+def test_refresh_disturbance_observer_gain() -> None:
+    st0 = MpcState(d_hat=0.0, last_y=100.0, last_u=200.0)
+    st = refresh_disturbance(
+        FIT, st0, y_meas=105.0, u_current=200.0, observer_gain=0.5
+    )
+    assert st.d_hat == pytest.approx(2.5)
+
+
+def test_solve_accepts_reference_preview() -> None:
+    lim = SetpointLimits("power_setpoint", "kW", 900.0, 1100.0, 50.0)
+    traj = [500.0] * 5 + [520.0] * 15
+    r = solve(
+        FIT,
+        [lim],
+        {"power_setpoint": 1000.0},
+        y_meas=500.0,
+        y_ref=500.0,
+        horizon_steps=20,
+        time_limit_s=2.0,
+        state=MpcState(),
+        y_ref_traj=traj,
+        terminal_weight=10.0,
+    )
+    assert r.best["power_setpoint"] >= 1000.0
+    assert r.planned_u is not None
+    assert len(r.planned_u) == 20
+
+
+def test_solve_control_horizon_respects_rate() -> None:
+    lim = SetpointLimits("power_setpoint", "kW", 0.0, 2000.0, 10.0)
+    r = solve(
+        FIT,
+        [lim],
+        {"power_setpoint": 1000.0},
+        y_meas=500.0,
+        y_ref=600.0,
+        horizon_steps=20,
+        time_limit_s=2.0,
+        state=MpcState(),
+        control_horizon=3,
+        move_weight=0.01,
+    )
+    assert abs(r.best["power_setpoint"] - 1000.0) <= 10.0 + 1e-9
+    assert r.planned_u is not None
+    assert len(r.planned_u) == 20
+
+
+def test_default_demo_config_retuned_horizon() -> None:
+    from mpc_core.sim.config import default_demo_config
+
+    cfg = default_demo_config()
+    assert cfg.horizon_steps == 40
+    assert cfg.terminal_weight == 50.0
+    assert cfg.control_horizon == 1
