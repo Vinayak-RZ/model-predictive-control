@@ -134,11 +134,12 @@ Figures below match the Streamlit scorecard used for the presentation deck (`pre
 
 | Scenario | Metric | MPC | PID | Optimised PID |
 | --- | --- | --- | --- | --- |
-| Setpoint tracking | Settling [s] | **88** | 179 | 112 |
-| Disturbance rejection | Settling [s] | **54** | 103 | 71 |
-| Power limits | Limit hits | **0** | 9 | 13 |
-| Power limits | Settling [s] | **152** | 199 | 199 |
-| Model mismatch | Settling [s] | **96** | 167 | 124 |
+| Setpoint tracking | Settling [s] | **73** | 179 | 99 |
+| Setpoint tracking | IAE | **1044** | 2477 | 1466 |
+| Disturbance rejection | Settling [s] | **46** | 103 | 60 |
+| Power limits | Limit hits | **0** | 6 | 0 |
+| Power limits | IAE | **8727** | 9153 | 9033 |
+| Model mismatch | Settling [s] | **83** | 167 | 109 |
 
 Simulation plots:
 
@@ -159,6 +160,6 @@ Simulation plots:
          PID + optimised PID (same plant, same metrics)
 ```
 
-Plain story: [`docs/EXPLAINER.md`](docs/EXPLAINER.md) · Maths / EE: [`docs/THEORY.md`](docs/THEORY.md) · Engineering notes: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.md`](report/report.md)
+Plain story: [`docs/EXPLAINER.md`](docs/EXPLAINER.md) · Maths / EE: [`docs/THEORY.md`](docs/THEORY.md) · Engineering notes: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.pdf`](report/report.pdf) · source [`report/main.tex`](report/main.tex) · notes [`report/README.md`](report/README.md)
 
 Educational use. Licences: [`CREDITS.md`](CREDITS.md).
