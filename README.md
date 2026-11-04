@@ -12,7 +12,7 @@
   <a href="#quick-start"><b>Quick start</b></a> ·
   <a href="#interactive-app"><b>Interactive app</b></a> ·
   <a href="#showcase-video"><b>Video</b></a> ·
-  <a href="docs/EXPLAINER.md"><b>Explainer</b></a> ·
+  <a href="docs/explainer.md"><b>Explainer</b></a> ·
   <a href="docs/THEORY.md"><b>Theory</b></a> ·
   <a href="HOW-IT-WORKS.md"><b>How it works</b></a> ·
   <a href="report/report.md"><b>Report</b></a>
@@ -134,12 +134,15 @@ Figures below match the Streamlit scorecard used for the presentation deck (`pre
 
 | Scenario | Metric | MPC | PID | Optimised PID |
 | --- | --- | --- | --- | --- |
-| Setpoint tracking | Settling [s] | **73** | 179 | 99 |
-| Setpoint tracking | IAE | **1044** | 2477 | 1466 |
-| Disturbance rejection | Settling [s] | **46** | 103 | 60 |
+| Setpoint tracking | Settling [s] | **75** | 179 | 99 |
+| Setpoint tracking | IAE | **869** | 2477 | 1466 |
+| Disturbance rejection | IAE | **466** | 1090 | 586 |
+| Disturbance rejection | Settling [s] | **47** | 103 | 60 |
 | Power limits | Limit hits | **0** | 6 | 0 |
-| Power limits | IAE | **8727** | 9153 | 9033 |
-| Model mismatch | Settling [s] | **83** | 167 | 109 |
+| Power limits | IAE | **8735** | 9153 | 9033 |
+| Model mismatch | IAE | **1088** | 2541 | 1667 |
+| Model mismatch | Settling [s] | **86** | 167 | 109 |
+| Ambient step | IAE | **416** | 1092 | 578 |
 
 Simulation plots:
 
@@ -160,6 +163,6 @@ Simulation plots:
          PID + optimised PID (same plant, same metrics)
 ```
 
-Plain story: [`docs/EXPLAINER.md`](docs/EXPLAINER.md) · Maths / EE: [`docs/THEORY.md`](docs/THEORY.md) · Engineering notes: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.pdf`](report/report.pdf) · source [`report/main.tex`](report/main.tex) · notes [`report/README.md`](report/README.md)
+Plain story: [`docs/explainer.md`](docs/explainer.md) · Maths / EE: [`docs/THEORY.md`](docs/THEORY.md) · MPC references: [`docs/mpc_literature.md`](docs/mpc_literature.md) · Engineering notes: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.pdf`](report/report.pdf) · source [`report/main.tex`](report/main.tex) · notes [`report/README.md`](report/README.md)
 
 Educational use. Licences: [`CREDITS.md`](CREDITS.md).

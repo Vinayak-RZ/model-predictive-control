@@ -30,11 +30,7 @@ RESULTS.mkdir(parents=True, exist_ok=True)
 
 
 def make_cfg() -> DemoConfig:
-    """Winning knobs from sweep: Nu=1 + reference preview; N=40, Qt=50.
-
-    Multi-move (Nu>1) with move penalty raised IAE on this heater; preview was
-    the change that beat scenario-tuned PID on setpoint tracking.
-    """
+    """Winning knobs: preview, N=40, Qt=50, Kalman observer, measured feedforward."""
     cfg = default_demo_config()
     return replace(
         cfg,
@@ -42,7 +38,7 @@ def make_cfg() -> DemoConfig:
         control_horizon=1,
         move_weight=0.0,
         terminal_weight=50.0,
-        observer_gain=1.0,
+        observer_gain=cfg.observer_gain,
         tracking_weight=1.0,
         solver_time_limit_s=2.0,
     )
