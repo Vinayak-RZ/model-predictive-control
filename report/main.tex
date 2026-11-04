@@ -217,23 +217,18 @@ Other winners are left in plain type.
 \scriptsize
 \caption{Closed-loop metrics from the retuned working copy. Blue bold = MPC best.}
 \label{tab:summary}
-\begin{tabular}{llrrr}
+\begin{tabular}{llrrrr}
 \toprule
-Scenario & Metric & MPC & PID & Opt.\ PID \\
+Scenario & Metric & MPC & PID & Opt.\ PID & Opt.\ PID+FF \\
 \midrule
-Setpoint & IAE & \mpcbest{869.0} & 2476.9 & 1466.4 \\
- & Settling [s] & \mpcbest{75} & 179 & 99 \\
- & Violations & \mpcbest{0} & 0 & 0 \\
-Disturbance & IAE & \mpcbest{466.2} & 1089.9 & 585.8 \\
- & Settling [s] & \mpcbest{47} & 103 & 60 \\
- & Violations & \mpcbest{0} & 0 & 0 \\
-Power limits & IAE & \mpcbest{8735.3} & 9153.3 & 9032.6 \\
- & Violations & \mpcbest{0} & 6 & 0 \\
- & Energy [kWh] & 8.280 & 7.986 & 8.073 \\
-Mismatch & IAE & \mpcbest{1088.5} & 2541.2 & 1666.6 \\
- & Settling [s] & \mpcbest{86} & 167 & 109 \\
-Ambient step & IAE & \mpcbest{415.6} & 1092.4 & 578.3 \\
- & Settling [s] & \mpcbest{47} & 102 & 60 \\
+Setpoint & IAE & \mpcbest{869.0} & 2476.9 & 1466.4 & 1466.4 \\
+ & Settling [s] & \mpcbest{75} & 179 & 99 & 99 \\
+Disturbance & IAE & \mpcbest{466.2} & 1089.9 & 585.8 & 582.7 \\
+ & Settling [s] & \mpcbest{47} & 103 & 60 & 60 \\
+Power limits & IAE & \mpcbest{8735.3} & 9153.3 & 9032.6 & 9032.6 \\
+ & Violations & \mpcbest{0} & 6 & 0 & 0 \\
+Mismatch & IAE & \mpcbest{1088.5} & 2541.2 & 1666.6 & 1611.6 \\
+Ambient step & IAE & \mpcbest{415.6} & 1092.4 & 578.3 & 585.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -305,11 +300,16 @@ Figure~\ref{fig:rob} shows the comparison.
 \end{figure}
 
 \section{Discussion and limitations}
-The retuned MPC is the better controller for this constrained heater on the evidence that matters for a coil with a legal operating window: lowest tracking IAE on every scenario in Table~\ref{tab:summary}; fastest settling on every scenario; zero violations wherever limits bind; and a clear robustness margin when the plant drifts away from the model the PID was tuned on.
+The retuned MPC is the better controller for this constrained heater on the batch evidence: lowest IAE on every primary scenario even against optimised PID with the same measured feedforward (Table~\ref{tab:summary}); fastest settling on the rows shown; zero violations wherever limits bind.
 
-Disturbance and ambient rows previously favoured scenario-tuned optimised PID when the bias observer used a unit innovation gain only.
-Adding a Kalman-tuned observer gain (\(\approx 2\) on the illustrative ARX) and steady-state feedforward from measured ambient temperature and heat-loss coefficient inside the prediction model closes that gap without retuning PID downward.
-Hand-tuned PID is never best on IAE or settling here; its only apparent ``win'' on energy in the power-limit case is paid for with six illegal slew steps.
+\paragraph{Fair feedforward baseline.}
+Optimised PID+FF re-runs \texttt{pid\_tune.py} with the identical static offset from measured \(T_{\mathrm{amb}}\) and \(U\). It closes most of the gap on disturbance rejection (\(582.7\) vs MPC \(466.2\)) but does not overtake MPC on any primary IAE row.
+
+\paragraph{Held-out checks (overfitting).}
+With MPC knobs fixed, we re-ran 100 cases (five batch scenarios \(\times\) twenty noise seeds with alternating \(0.15\,^\circ\mathrm{C}\) sensor noise), three unseen setpoint/disturbance timings, and six \(\pm 20\%\) plant-scale variants on setpoint tracking (`held\_out\_validation.json`). Aggregate lowest-IAE win rate: MPC \(100\%\); mean IAE \(2326 \pm 3227\) (MPC) vs \(2672 \pm 3211\) (optimised PID) vs \(2661 \pm 3214\) (optimised PID+FF).
+
+\paragraph{Remaining weaknesses.}
+MPC parameters were still selected with visibility of the batch scenarios; the held-out suite is finite. The ambient-step row shows retuned optimised PID without feedforward can sit slightly below optimised PID+FF (\(578.3\) vs \(585.0\)) even though MPC remains best (\(415.6\)). The predictor is a single ARX, not the nonlinear twin. Only power is constrained, not temperature. Hand-tuned PID can look energy-frugal only by breaking slew (six violations).
 
 Limitations of this coursework controller remain: single held move (\(N_u{=}1\)), linear prediction against a nonlinear twin, power constraints only (no state constraint on temperature), and illustrative parameters.
 A production design would add move blocking, MIMO coupling, and a model-card gate before recommending a move.

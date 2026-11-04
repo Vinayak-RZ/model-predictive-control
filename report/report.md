@@ -20,15 +20,17 @@ All parameters are **illustrative coursework values**, not customer or plant dat
 
 ## Summary metrics (MPC vs optimised PID)
 
-| Scenario | MPC IAE | Optimised PID IAE | MPC wins IAE? |
-| --- | ---: | ---: | --- |
-| Setpoint tracking | **869** | 1466 | yes |
-| Disturbance rejection | **466** | 586 | yes |
-| Ambient step | **416** | 578 | yes |
-| Power limits | **8735** | 9033 | yes |
-| Model mismatch | **1088** | 1667 | yes |
+| Scenario | MPC IAE | PID IAE | Opt. PID | Opt. PID + same FF | MPC lowest? |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Setpoint tracking | **869** | 2477 | 1466 | 1466 | yes |
+| Disturbance rejection | **466** | 1090 | 586 | 582 | yes |
+| Ambient step | **416** | 1092 | 578 | 585 | yes |
+| Power limits | **8735** | 9153 | 9033 | 9033 | yes |
+| Model mismatch | **1088** | 2541 | 1667 | 1612 | yes |
 
-Literature map: [`docs/mpc_literature.md`](../docs/mpc_literature.md). Plain-language walkthrough: [`docs/explainer.md`](../docs/explainer.md).
+Held-out check (`report/held_out_validation.json`): 100 runs (5 scenarios × 20 noise seeds), MPC **100%** lowest-IAE win rate vs all baselines; mean IAE 2326 ± 3227 (MPC) vs 2672 ± 3211 (opt. PID) vs 2661 ± 3214 (opt. PID+FF). Unseen step timings and ±20% plant scales: MPC still wins every run in the sweep.
+
+Fairness: optimised PID+FF uses the **same** static `T_amb`/`U` feedforward as MPC, re-optimised via `pid_tune.py`. Hand-tuned and plain optimised PID rows are unchanged.
 
 ---
 

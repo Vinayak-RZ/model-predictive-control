@@ -24,12 +24,24 @@
       "constraint_violation_steps": 0,
       "energy_kwh": 5.419554814358623
     },
+    "optimized_pid_feedforward": {
+      "iae": 1466.416576856722,
+      "ise": 33836.921792749476,
+      "overshoot_pct": 0.28606353182650446,
+      "settling_time_s": 99.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 5.419554814358623
+    },
     "optimized_pid_gains": {
       "kp": 0.657261661628341,
       "ki": 0.014324983607382383,
       "kd": 4.540791857929044e-07
     },
-    "runtime_s": 10.134581351000065
+    "optimized_pid_feedforward_gains": {
+      "kp": 0.657261661628341,
+      "ki": 0.014324983607382383,
+      "kd": 4.540791857929044e-07
+    }
   },
   "disturbance_rejection": {
     "mpc": {
@@ -56,12 +68,24 @@
       "constraint_violation_steps": 0,
       "energy_kwh": 3.6072544451168373
     },
+    "optimized_pid_feedforward": {
+      "iae": 581.6830085117335,
+      "ise": 7757.68578590287,
+      "overshoot_pct": 0.2667198530140833,
+      "settling_time_s": 60.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 3.607267733411527
+    },
     "optimized_pid_gains": {
       "kp": 1.141206723887131,
       "ki": 0.03346878163509304,
       "kd": 0.17376049620586614
     },
-    "runtime_s": 7.802286360999915
+    "optimized_pid_feedforward_gains": {
+      "kp": 1.1432963558604816,
+      "ki": 0.03255302670256669,
+      "kd": 0.1653225368307786
+    }
   },
   "power_constraints": {
     "mpc": {
@@ -88,12 +112,24 @@
       "constraint_violation_steps": 0,
       "energy_kwh": 8.073318328502369
     },
+    "optimized_pid_feedforward": {
+      "iae": 9032.603246382894,
+      "ise": 489472.05569184513,
+      "overshoot_pct": 0.0,
+      "settling_time_s": 199.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 8.073318328502369
+    },
     "optimized_pid_gains": {
       "kp": 0.08184810215372447,
       "ki": 0.0,
       "kd": 0.02132090520751429
     },
-    "runtime_s": 5.111854441999981
+    "optimized_pid_feedforward_gains": {
+      "kp": 0.08184810215372447,
+      "ki": 0.0,
+      "kd": 0.02132090520751429
+    }
   },
   "model_mismatch": {
     "mpc": {
@@ -120,43 +156,23 @@
       "constraint_violation_steps": 0,
       "energy_kwh": 6.236323710793733
     },
+    "optimized_pid_feedforward": {
+      "iae": 1611.5511207115067,
+      "ise": 37161.18620874488,
+      "overshoot_pct": 0.19873946305486592,
+      "settling_time_s": 107.0,
+      "constraint_violation_steps": 0,
+      "energy_kwh": 6.23825980207617
+    },
     "optimized_pid_gains": {
       "kp": 0.6684617863226037,
       "ki": 0.013678334405339282,
       "kd": 7.299804604346114e-07
     },
-    "runtime_s": 10.101697650000006
-  },
-  "ambient_step": {
-    "mpc": {
-      "iae": 415.63912065222115,
-      "ise": 3110.9385516655248,
-      "overshoot_pct": 0.4765522035614451,
-      "settling_time_s": 47.0,
-      "constraint_violation_steps": 0,
-      "energy_kwh": 3.5595091103419634
-    },
-    "pid": {
-      "iae": 1092.3994321489529,
-      "ise": 13610.724682934548,
-      "overshoot_pct": 0.0,
-      "settling_time_s": 102.0,
-      "constraint_violation_steps": 0,
-      "energy_kwh": 3.4638184780412633
-    },
-    "optimized_pid": {
-      "iae": 578.3330036106918,
-      "ise": 7751.0521587780995,
-      "overshoot_pct": 0.23556681801645266,
-      "settling_time_s": 60.0,
-      "constraint_violation_steps": 0,
-      "energy_kwh": 3.505371997137554
-    },
-    "optimized_pid_gains": {
-      "kp": 1.1425104846256524,
-      "ki": 0.03291986956092894,
-      "kd": 0.17376091075908562
-    },
-    "runtime_s": 9.249898540999993
+    "optimized_pid_feedforward_gains": {
+      "kp": 0.6666253971592696,
+      "ki": 0.011973081452599139,
+      "kd": 0.009717624318619035
+    }
   }
 }

@@ -136,6 +136,7 @@ You can run three controller stories on the same heater story:
 | **MPC** | Plans ahead with a model; hard power limits inside the optimiser |
 | **PID** | Reacts to the temperature error now / over time / how fast it is changing; no preview |
 | **Optimised PID** | Still a PID online, but its three gains were chosen offline by an optimiser on the same scenario |
+| **Optimised PID + FF** | Same optimiser, plus the **same** measured `T_amb`/`U` static feedforward MPC uses (`pid_measured_feedforward=True`) |
 
 ---
 
@@ -276,7 +277,17 @@ Optimised gains minimise IAE + violation penalty on the **same** plant (`pid_tun
 1. **Preview:** It sees the 80→120 °C step (or 165 °C target) before the error grows; PID waits for drift.
 2. **Constraints in the optimiser:** Under 150 kW / 8 kW/s, MPC never plans illegal moves; hand-tuned PID logs six slew violations.
 3. **Bias + feedforward:** Heat-loss and ambient steps enter the prediction through \(u_{\mathrm{ff}}\) and a fast \(\hat d\); PID must infer load only from temperature error (unless retuned offline).
-4. **One policy everywhere:** Batch MPC uses the same knobs on all scenarios; optimised PID gets fresh gains per scenario yet still trails on IAE after the retune.
+4. **One policy everywhere:** Batch MPC uses the same knobs on all scenarios; optimised PID gets fresh gains per scenario. After adding **optimised PID + the same feedforward**, MPC still has the lowest IAE on every primary scenario (see README table).
+
+---
+
+## Limitations (honest)
+
+- **Tuning exposure:** Horizon \(N\), terminal weight, and Kalman observer gain were chosen while inspecting these batch scenarios. Held-out checks (20 noise seeds, unseen step timings, ±20% plant scales) still show MPC with the **lowest IAE on every run** in those sweeps—see `results/held_out_validation.json`—but this is not a guarantee on real plant data.
+- **Feedforward symmetry:** MPC and **Opt. PID+FF** both use measured `T_amb` and `U`. Plain PID and optimised PID without FF do not. On the **ambient step**, retuned Opt. PID+FF (**585** IAE) is slightly **worse** than optimised PID alone (**578**) because the static offset fights the retuned feedback gains.
+- **Model class:** Prediction stays a single ARX plus bias; no MIMO, no state constraints on metal temperature, no move blocking beyond one held move.
+- **Compute:** Each sample solves a small NLP; PID is cheaper online.
+- **Energy:** Hand-tuned PID sometimes uses less energy by violating slew limits (six steps on the power-limit case).
 
 ---
 

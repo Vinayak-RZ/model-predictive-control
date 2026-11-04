@@ -130,19 +130,24 @@ The cut focuses on power limits: plain PID breaks the slew; MPC stays inside the
 
 ## Proof (batch metrics)
 
-Figures below match the Streamlit scorecard used for the presentation deck (`presentation.py`).
+Primary scenarios use noise seed **42**, no sensor noise unless noted. **Opt. PID+FF** = same measured `T_amb`/`U` feedforward as MPC, gains re-optimised with `pid_tune.py`.
+
+| Scenario | MPC IAE | PID IAE | Opt. PID | Opt. PID+FF |
+| --- | ---: | ---: | ---: | ---: |
+| Setpoint tracking | **869** | 2477 | 1466 | 1466 |
+| Disturbance rejection | **466** | 1090 | 586 | 582 |
+| Ambient step | **416** | 1092 | 578 | 585 |
+| Power limits | **8735** | 9153 | 9033 | 9033 |
+| Model mismatch | **1088** | 2541 | 1667 | 1612 |
 
 | Scenario | Metric | MPC | PID | Optimised PID |
 | --- | --- | --- | --- | --- |
 | Setpoint tracking | Settling [s] | **75** | 179 | 99 |
-| Setpoint tracking | IAE | **869** | 2477 | 1466 |
-| Disturbance rejection | IAE | **466** | 1090 | 586 |
 | Disturbance rejection | Settling [s] | **47** | 103 | 60 |
 | Power limits | Limit hits | **0** | 6 | 0 |
-| Power limits | IAE | **8735** | 9153 | 9033 |
-| Model mismatch | IAE | **1088** | 2541 | 1667 |
 | Model mismatch | Settling [s] | **86** | 167 | 109 |
-| Ambient step | IAE | **416** | 1092 | 578 |
+
+Held-out validation: `python3 scripts/run_held_out_validation.py` → `results/held_out_validation.json` (20 noise seeds × 5 scenarios, unseen step timings, ±20% plant scales).
 
 Simulation plots:
 

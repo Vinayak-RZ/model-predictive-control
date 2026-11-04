@@ -63,12 +63,25 @@
         "constraint_violation_steps": 0,
         "energy_kwh": 5.419554814358623
       },
+      "optimized_pid_feedforward": {
+        "iae": 1466.416576856722,
+        "ise": 33836.921792749476,
+        "overshoot_pct": 0.28606353182650446,
+        "settling_time_s": 99.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 5.419554814358623
+      },
       "optimized_pid_gains": {
         "kp": 0.657261661628341,
         "ki": 0.014324983607382383,
         "kd": 4.540791857929044e-07
       },
-      "runtime_s": 10.134581351000065
+      "optimized_pid_feedforward_gains": {
+        "kp": 0.657261661628341,
+        "ki": 0.014324983607382383,
+        "kd": 4.540791857929044e-07
+      },
+      "runtime_s": 19.691554980999967
     },
     "disturbance_rejection": {
       "mpc": {
@@ -95,12 +108,25 @@
         "constraint_violation_steps": 0,
         "energy_kwh": 3.6072544451168373
       },
+      "optimized_pid_feedforward": {
+        "iae": 581.6830085117335,
+        "ise": 7757.68578590287,
+        "overshoot_pct": 0.2667198530140833,
+        "settling_time_s": 60.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.607267733411527
+      },
       "optimized_pid_gains": {
         "kp": 1.141206723887131,
         "ki": 0.03346878163509304,
         "kd": 0.17376049620586614
       },
-      "runtime_s": 7.802286360999915
+      "optimized_pid_feedforward_gains": {
+        "kp": 1.1432963558604816,
+        "ki": 0.03255302670256669,
+        "kd": 0.1653225368307786
+      },
+      "runtime_s": 19.613422178000064
     },
     "power_constraints": {
       "mpc": {
@@ -127,12 +153,25 @@
         "constraint_violation_steps": 0,
         "energy_kwh": 8.073318328502369
       },
+      "optimized_pid_feedforward": {
+        "iae": 9032.603246382894,
+        "ise": 489472.05569184513,
+        "overshoot_pct": 0.0,
+        "settling_time_s": 199.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 8.073318328502369
+      },
       "optimized_pid_gains": {
         "kp": 0.08184810215372447,
         "ki": 0.0,
         "kd": 0.02132090520751429
       },
-      "runtime_s": 5.111854441999981
+      "optimized_pid_feedforward_gains": {
+        "kp": 0.08184810215372447,
+        "ki": 0.0,
+        "kd": 0.02132090520751429
+      },
+      "runtime_s": 9.64675946400007
     },
     "model_mismatch": {
       "mpc": {
@@ -159,12 +198,25 @@
         "constraint_violation_steps": 0,
         "energy_kwh": 6.236323710793733
       },
+      "optimized_pid_feedforward": {
+        "iae": 1611.5511207115067,
+        "ise": 37161.18620874488,
+        "overshoot_pct": 0.19873946305486592,
+        "settling_time_s": 107.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 6.23825980207617
+      },
       "optimized_pid_gains": {
         "kp": 0.6684617863226037,
         "ki": 0.013678334405339282,
         "kd": 7.299804604346114e-07
       },
-      "runtime_s": 10.101697650000006
+      "optimized_pid_feedforward_gains": {
+        "kp": 0.6666253971592696,
+        "ki": 0.011973081452599139,
+        "kd": 0.009717624318619035
+      },
+      "runtime_s": 19.571498604
     },
     "ambient_step": {
       "mpc": {
@@ -191,12 +243,25 @@
         "constraint_violation_steps": 0,
         "energy_kwh": 3.505371997137554
       },
+      "optimized_pid_feedforward": {
+        "iae": 585.0411613919126,
+        "ise": 7740.492642660599,
+        "overshoot_pct": 0.31691857566624754,
+        "settling_time_s": 60.0,
+        "constraint_violation_steps": 0,
+        "energy_kwh": 3.5383676839054257
+      },
       "optimized_pid_gains": {
         "kp": 1.1425104846256524,
         "ki": 0.03291986956092894,
         "kd": 0.17376091075908562
       },
-      "runtime_s": 9.249898540999993
+      "optimized_pid_feedforward_gains": {
+        "kp": 1.1293116388929596,
+        "ki": 0.03272845766839382,
+        "kd": 0.16929856312642944
+      },
+      "runtime_s": 19.420537144000036
     },
     "robustness_nominal_gains_on_mismatch": {
       "mpc": {

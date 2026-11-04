@@ -46,9 +46,9 @@ MPC machinery.
   in Control — feedforward of measured loads and ambient conditions.
 
 **What we use:** When ambient temperature `T_amb` or loss coefficient `U` change,
-the simulator exposes them as **measured** plant context (not oracle future
-knowledge). MPC adds a steady-state power offset from the heat balance
-`η P ≈ U (T − T_amb)` inside the rolled-out prediction (`steady_state_loss_offset_kw`).
+the simulator exposes them as **measured** plant context. MPC and the
+**optimised PID+FF** baseline add the same steady-state power offset from the
+heat balance (`steady_state_loss_offset_kw`); plain PID baselines do not.
 
 **Why:** Heat-loss bumps and ambient steps are exactly the slow parameters the
 heater model exposes. Preview plus feedforward lets MPC raise power *before* the
