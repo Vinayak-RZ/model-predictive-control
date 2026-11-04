@@ -10,14 +10,14 @@ Course write-up for the offset-free MPC vs PID lab on the induction-heater twin.
 | Metrics used in the PDF | [`metrics_summary.json`](metrics_summary.json) |
 | Shorter Markdown draft | [`report.md`](report.md) (numbers may lag the PDF; rebuild metrics then edit) |
 
-British spelling. Numbers in the PDF come from `metrics_summary.json`, never invented.
+British spelling. Prefer numbers from `metrics_summary.json` after a metrics rebuild. The current PDF is a coursework layout pass with **12 figures** (README MPC infographic, architecture, three Streamlit screens, IAE bars, four scenario traces, violations, robustness); ambient-step metrics stay in the summary table only.
 
 ## What the numbers mean
 
 - **Batch scenarios** in `metrics_summary.json → scenarios`: setpoint tracking, disturbance rejection, power constraints, model mismatch, ambient step, plus a robustness check that reuses nominal-tuned PID gains under mismatch.
 - **MPC params** under `mpc_params_retuned`: `N=40` (45 on the power scenario), `Nu=1`, `Qt=50`, `R=0`, observer gain `1.0`, **reference preview** on. Legacy comparison (`mpc_params_legacy`, `legacy_vs_retuned_setpoint_iae`) is the pre-retune `N=25`, no preview, `Qt=0` run.
 - **UI / README proof table** should match the retuned settling times and limit hits from this JSON after a metrics rebuild. Streamlit still freezes optimised-PID gains from the mild setpoint case for the fair UI comparison; batch scripts retune per scenario for the report tables.
-- Simulation PNGs under `figures/<scenario>.png` are produced by the metrics script. Architecture / bar charts (`architecture.png`, `iae_bars.png`, …) come from the charts script. Streamlit screenshots and the video poster were copied from `docs/` / `video/` at report freeze time; refresh them from those trees if the UI changes.
+- Simulation PNGs under `figures/<scenario>.png` are produced by the metrics script. Architecture / bar charts (`architecture.png`, `iae_bars.png`, …) come from the charts script. Streamlit screenshots come from `docs/` at report freeze time. The opening MPC loop figure is a whitened copy of `assets/mpc-infographic.png`. Video poster / animation preview frames are **not** included in the PDF.
 
 ## Rebuild from the repo root
 
@@ -47,4 +47,4 @@ A full metrics rebuild takes a few minutes (PID retunes per scenario). Do not ha
 
 ## Layout of `main.tex`
 
-Abstract → introduction → plant and identification → offset-free MPC (with preview / terminal cost) → PID baselines → experiments → results (MPC-best cells in blue bold) → discussion of losses → conclusion → references.
+Abstract → MPC loop infographic → introduction → plant and identification → offset-free MPC (with preview / terminal cost) → PID baselines → experiments → results (MPC-best cells in blue bold) → discussion of losses → conclusion → references.
