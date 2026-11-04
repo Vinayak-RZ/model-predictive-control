@@ -14,6 +14,7 @@ from mpc_core.sim.theme import (
     COPPER,
     MPC_COLOR,
     OPT_PID_COLOR,
+    OPT_PID_FF_COLOR,
     PID_COLOR,
     SURFACE_SUBTLE,
     TEXT_MUTED,
@@ -325,6 +326,8 @@ def controller_color(label: str) -> str:
     key = label.strip().lower()
     if key == "mpc":
         return MPC_COLOR
+    if "ff" in key or "+ff" in key:
+        return OPT_PID_FF_COLOR
     if key in ("optimized pid", "opt. pid", "opt pid"):
         return OPT_PID_COLOR
     return PID_COLOR

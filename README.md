@@ -123,14 +123,14 @@ The cut focuses on power limits: plain PID breaks the slew; MPC stays inside the
 </p>
 
 <p align="center">
-  <img src="docs/demo-preview.gif" width="720" alt="10 s preview of the power-limit animation">
+  <img src="docs/demo-preview.gif" width="720" alt="Preview of power-limit batch figure (MPC vs PID traces)">
 </p>
 
 **Repo copy:** [`video/out/mpc-vs-pid.mp4`](video/out/mpc-vs-pid.mp4) · **Duration:** 82 s · **Size:** ~1.8 MB · **Source:** [`video/index.html`](video/index.html) + [`video/data/`](video/data/) from `python3 scripts/export_video_data.py`.
 
 ## Proof (batch metrics)
 
-Primary scenarios use noise seed **42**, no sensor noise unless noted. **Opt. PID+FF** = same measured `T_amb`/`U` feedforward as MPC, gains re-optimised with `pid_tune.py`.
+Figures below use the **same batch simulation traces** as the report (`scripts/rebuild_report_metrics.py`). MPC is drawn in cobalt on top; PID baselines in grey. Each trace plot labels MPC IAE and percent improvement vs optimised PID.
 
 | Scenario | MPC IAE | PID IAE | Opt. PID | Opt. PID+FF |
 | --- | ---: | ---: | ---: | ---: |

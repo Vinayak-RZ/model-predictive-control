@@ -73,7 +73,9 @@ def main() -> None:
             mpc=mpc,
             pid=pid,
             optimized_pid=opt_pid,
+            optimized_pid_ff=opt_pid_ff,
             path=png,
+            scenario_key=key,
         )
         summary[key] = {
             "mpc": _metrics_dict(mpc.metrics),

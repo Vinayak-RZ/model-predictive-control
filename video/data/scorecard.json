@@ -2,8 +2,8 @@
   {
     "scenario": "setpoint_tracking",
     "controller": "MPC",
-    "iae": 1824.3047261019337,
-    "settling_s": 101.0,
+    "iae": 868.9535469020253,
+    "settling_s": 75.0,
     "violations": 0
   },
   {
@@ -16,15 +16,15 @@
   {
     "scenario": "setpoint_tracking",
     "controller": "Optimized PID",
-    "iae": 1518.1274618573514,
-    "settling_s": 100.0,
+    "iae": 1575.911635385033,
+    "settling_s": 102.0,
     "violations": 0
   },
   {
     "scenario": "disturbance_rejection",
     "controller": "MPC",
-    "iae": 954.945487365502,
-    "settling_s": 62.0,
+    "iae": 466.21061973885026,
+    "settling_s": 47.0,
     "violations": 0
   },
   {
@@ -37,14 +37,14 @@
   {
     "scenario": "disturbance_rejection",
     "controller": "Optimized PID",
-    "iae": 585.7930293695631,
-    "settling_s": 60.0,
+    "iae": 611.642178321225,
+    "settling_s": 62.0,
     "violations": 0
   },
   {
     "scenario": "power_constraints",
     "controller": "MPC",
-    "iae": 9480.125331794081,
+    "iae": 8735.290009520702,
     "settling_s": 199.0,
     "violations": 0
   },
@@ -58,15 +58,15 @@
   {
     "scenario": "power_constraints",
     "controller": "Optimized PID",
-    "iae": 9032.603246382894,
+    "iae": 9557.5562569106,
     "settling_s": 199.0,
-    "violations": 0
+    "violations": 11
   },
   {
     "scenario": "model_mismatch",
     "controller": "MPC",
-    "iae": 2009.0488586178149,
-    "settling_s": 111.0,
+    "iae": 1088.4747413594341,
+    "settling_s": 86.0,
     "violations": 0
   },
   {
@@ -79,8 +79,8 @@
   {
     "scenario": "model_mismatch",
     "controller": "Optimized PID",
-    "iae": 1695.4019670278376,
-    "settling_s": 109.0,
+    "iae": 1806.4297507933913,
+    "settling_s": 111.0,
     "violations": 0
   }
 ]

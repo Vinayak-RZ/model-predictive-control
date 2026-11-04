@@ -239,8 +239,15 @@ Figure~\ref{fig:traces} shows the four primary time responses.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\textwidth]{figures/iae_bars.png}
-  \caption{IAE by scenario. Hatched bars mark where MPC is lowest.}
+  \caption{IAE by scenario (y-axis from zero). Percent labels show MPC improvement vs optimised PID.}
   \label{fig:iae}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth]{figures/held_out_summary.png}
+  \caption{Held-out check: lowest-IAE win rate and mean IAE over 100 noise-seeded batch runs (MPC knobs fixed).}
+  \label{fig:heldout}
 \end{figure}
 
 \begin{figure}[H]
@@ -263,7 +270,7 @@ Figure~\ref{fig:traces} shows the four primary time responses.
     \includegraphics[width=\linewidth]{figures/model_mismatch.png}
     \caption{Model mismatch}
   \end{subfigure}
-  \caption{Temperature and coil power for MPC, PID, and optimised PID.}
+  \caption{Temperature and coil power (MPC accent on top; IAE callout on each trace figure).}
   \label{fig:traces}
 \end{figure}
 

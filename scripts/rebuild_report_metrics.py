@@ -183,15 +183,17 @@ def main():
             result_label="optimized_pid_feedforward",
         )
         title = scenario.title if key != "model_mismatch" else "Model mismatch (setpoint tracking)"
-        save_triple_figure(
-            title=title, mpc=mpc, pid=pid, optimized_pid=opt_pid,
-            path=FIG / f"{key}.png",
+        fig_kw = dict(
+            title=title,
+            mpc=mpc,
+            pid=pid,
+            optimized_pid=opt_pid,
+            optimized_pid_ff=opt_pid_ff,
+            scenario_key=key,
         )
+        save_triple_figure(path=FIG / f"{key}.png", **fig_kw)
         if key in ("setpoint_tracking", "disturbance_rejection", "power_constraints", "model_mismatch"):
-            save_triple_figure(
-                title=title, mpc=mpc, pid=pid, optimized_pid=opt_pid,
-                path=RESULTS / f"{key}.png",
-            )
+            save_triple_figure(path=RESULTS / f"{key}.png", **fig_kw)
         summary["scenarios"][key] = {
             "mpc": md(mpc.metrics),
             "pid": md(pid.metrics),
@@ -282,12 +284,16 @@ def main():
     print("Wrote", RESULTS / "metrics_summary.json")
 
     print("=== held-out validation ===", flush=True)
+    import os
     import runpy
 
-    runpy.run_path(
-        str(ROOT / "scripts" / "run_held_out_validation.py"),
-        run_name="__main__",
-    )
+    if os.environ.get("SKIP_HELD_OUT") == "1":
+        print("SKIP_HELD_OUT=1 — using existing held_out_validation.json")
+    else:
+        runpy.run_path(
+            str(ROOT / "scripts" / "run_held_out_validation.py"),
+            run_name="__main__",
+        )
 
 
 if __name__ == "__main__":
