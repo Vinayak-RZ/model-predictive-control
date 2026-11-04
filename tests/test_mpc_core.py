@@ -154,3 +154,4 @@ def test_default_demo_config_retuned_horizon() -> None:
     assert cfg.horizon_steps == 40
     assert cfg.terminal_weight == 50.0
     assert cfg.control_horizon == 1
+    assert cfg.observer_gain == pytest.approx(2.03, rel=0.05)
