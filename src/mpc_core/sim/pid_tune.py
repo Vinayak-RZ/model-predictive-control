@@ -35,6 +35,7 @@ def tune_pid_gains(
     x0: tuple[float, float, float] | None = None,
     violation_weight: float = 250.0,
     maxiter: int = 40,
+    pid_measured_feedforward: bool = False,
 ) -> TuneResult:
     """Minimise IAE plus a penalty on actuator constraint violations."""
     cfg = cfg or default_demo_config()
@@ -50,6 +51,7 @@ def tune_pid_gains(
             limits=limits,
             options=base,
             pid_gains=gains,
+            pid_measured_feedforward=pid_measured_feedforward,
         )
         return _objective_from_metrics(
             run.metrics.iae,
@@ -73,6 +75,7 @@ def tune_pid_gains(
         limits=limits,
         options=base,
         pid_gains=best,
+        pid_measured_feedforward=pid_measured_feedforward,
     )
     obj = _objective_from_metrics(
         verify.metrics.iae,
