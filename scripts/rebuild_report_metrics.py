@@ -30,11 +30,7 @@ RESULTS.mkdir(parents=True, exist_ok=True)
 
 
 def make_cfg() -> DemoConfig:
-    """Winning knobs from sweep: Nu=1 + reference preview; N=40, Qt=50.
-
-    Multi-move (Nu>1) with move penalty raised IAE on this heater; preview was
-    the change that beat scenario-tuned PID on setpoint tracking.
-    """
+    """Winning knobs: preview, N=40, Qt=50, Kalman observer, measured feedforward."""
     cfg = default_demo_config()
     return replace(
         cfg,
@@ -42,7 +38,7 @@ def make_cfg() -> DemoConfig:
         control_horizon=1,
         move_weight=0.0,
         terminal_weight=50.0,
-        observer_gain=1.0,
+        observer_gain=cfg.observer_gain,
         tracking_weight=1.0,
         solver_time_limit_s=2.0,
     )
@@ -152,6 +148,13 @@ def main():
         print(f"=== {key} ===", flush=True)
         t0 = time.perf_counter()
         tune = tune_pid_gains(scenario, cfg=cfg, options=options, maxiter=35)
+        tune_ff = tune_pid_gains(
+            scenario,
+            cfg=cfg,
+            options=options,
+            maxiter=35,
+            pid_measured_feedforward=True,
+        )
         opt_gains[key] = tune.gains
         kw = {}
         if h_override:
@@ -173,28 +176,44 @@ def main():
             scenario, "pid", cfg=cfg, options=options,
             pid_gains=tune.gains, result_label="optimized_pid",
         )
-        title = scenario.title if key != "model_mismatch" else "Model mismatch (setpoint tracking)"
-        save_triple_figure(
-            title=title, mpc=mpc, pid=pid, optimized_pid=opt_pid,
-            path=FIG / f"{key}.png",
+        opt_pid_ff = run_closed_loop(
+            scenario, "pid", cfg=cfg, options=options,
+            pid_gains=tune_ff.gains,
+            pid_measured_feedforward=True,
+            result_label="optimized_pid_feedforward",
         )
+        title = scenario.title if key != "model_mismatch" else "Model mismatch (setpoint tracking)"
+        fig_kw = dict(
+            title=title,
+            mpc=mpc,
+            pid=pid,
+            optimized_pid=opt_pid,
+            optimized_pid_ff=opt_pid_ff,
+            scenario_key=key,
+        )
+        save_triple_figure(path=FIG / f"{key}.png", **fig_kw)
         if key in ("setpoint_tracking", "disturbance_rejection", "power_constraints", "model_mismatch"):
-            save_triple_figure(
-                title=title, mpc=mpc, pid=pid, optimized_pid=opt_pid,
-                path=RESULTS / f"{key}.png",
-            )
+            save_triple_figure(path=RESULTS / f"{key}.png", **fig_kw)
         summary["scenarios"][key] = {
             "mpc": md(mpc.metrics),
             "pid": md(pid.metrics),
             "optimized_pid": md(opt_pid.metrics),
+            "optimized_pid_feedforward": md(opt_pid_ff.metrics),
             "optimized_pid_gains": {
                 "kp": tune.gains.kp, "ki": tune.gains.ki, "kd": tune.gains.kd,
+            },
+            "optimized_pid_feedforward_gains": {
+                "kp": tune_ff.gains.kp,
+                "ki": tune_ff.gains.ki,
+                "kd": tune_ff.gains.kd,
             },
             "runtime_s": time.perf_counter() - t0,
         }
         s = summary["scenarios"][key]
         print(
-            f"  IAE {s['mpc']['iae']:.1f}/{s['pid']['iae']:.1f}/{s['optimized_pid']['iae']:.1f} "
+            f"  IAE mpc/pid/opt/opt+ff "
+            f"{s['mpc']['iae']:.1f}/{s['pid']['iae']:.1f}/"
+            f"{s['optimized_pid']['iae']:.1f}/{s['optimized_pid_feedforward']['iae']:.1f} "
             f"viol {s['mpc']['constraint_violation_steps']}/"
             f"{s['pid']['constraint_violation_steps']}/"
             f"{s['optimized_pid']['constraint_violation_steps']} "
@@ -263,6 +282,18 @@ def main():
     (RESULTS / "metrics_summary.json").write_text(json.dumps(slim, indent=2) + "\n")
     print("Wrote", OUT / "metrics_summary.json")
     print("Wrote", RESULTS / "metrics_summary.json")
+
+    print("=== held-out validation ===", flush=True)
+    import os
+    import runpy
+
+    if os.environ.get("SKIP_HELD_OUT") == "1":
+        print("SKIP_HELD_OUT=1 — using existing held_out_validation.json")
+    else:
+        runpy.run_path(
+            str(ROOT / "scripts" / "run_held_out_validation.py"),
+            run_name="__main__",
+        )
 
 
 if __name__ == "__main__":

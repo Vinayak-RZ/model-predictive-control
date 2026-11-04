@@ -136,6 +136,7 @@ You can run three controller stories on the same heater story:
 | **MPC** | Plans ahead with a model; hard power limits inside the optimiser |
 | **PID** | Reacts to the temperature error now / over time / how fast it is changing; no preview |
 | **Optimised PID** | Still a PID online, but its three gains were chosen offline by an optimiser on the same scenario |
+| **Optimised PID + FF** | Same optimiser, plus the **same** measured `T_amb`/`U` static feedforward MPC uses (`pid_measured_feedforward=True`) |
 
 ---
 
@@ -153,7 +154,7 @@ In this lab, [`src/mpc_core/sim/pid.py`](../src/mpc_core/sim/pid.py) also **clip
 
 Hand-picked gains are one baseline. **Optimised PID** keeps the same online law, but [`src/mpc_core/sim/pid_tune.py`](../src/mpc_core/sim/pid_tune.py) searches for gains that minimise a cost: mainly **IAE** (integrated absolute error) plus a penalty if the run violates power or rate limits.
 
-So “optimised PID” means *offline tuning by optimisation*, not a second predictive controller. It is a strong, honest baseline: it can beat MPC on raw error when retuned for that exact scenario, but it still has **no horizon preview**, and you pay that tuning cost again when the regime changes.
+So “optimised PID” means *offline tuning by optimisation*, not a second predictive controller. It is a strong baseline: gains are searched per scenario on the same plant and limits. After the Nov 2026 MPC retune (Kalman observer + measured ambient/\(U\) feedforward), **MPC leads on every batch IAE row** in `results/metrics_summary.json`, while PID still has no horizon preview.
 
 ---
 
@@ -198,5 +199,116 @@ Use this script almost verbatim:
 ## Where to go next
 
 - **Maths, heat balance, cost function, discrete PID, metrics:** [THEORY.md](THEORY.md)
+- **MPC papers mapped to code:** [mpc_literature.md](mpc_literature.md)
 - **Knob list and solver notes:** [HOW-IT-WORKS.md](../HOW-IT-WORKS.md)
 - **Scenario tables and figures:** [report/report.md](../report/report.md)
+
+---
+
+## Design choices (for the owner)
+
+| Choice | What we picked | Why |
+| --- | --- | --- |
+| Language | Python 3.12 | Matches course stack, SciPy/CasADi bindings, Streamlit UI |
+| Plant | CasADi heat balance `ηP − U(T−T_amb)` | Transparent physics, same twin in sim and report |
+| MPC model | Identified ARX `y_{k+1}=ay_k+bu_k` | Fast roll-out inside the optimiser; coeffs from an offline step test |
+| Solver | SciPy `minimize` (L-BFGS-B / SLSQP) | Small SISO QP-like problem; no external MILP licence |
+| Horizon | `N=40` (45 on power limits) | Long enough to see setpoint steps and saturation before they hit |
+| Weights | `Q=1`, `Q_t=50`, `R=0` | Preview + terminal cost improved setpoint IAE; move penalty trials hurt on this slow plant |
+| Observer | Kalman gain ≈ **2** on `d̂` | Faster bias tracking after heat-loss / ambient events (see literature note) |
+| Feedforward | Measured `T_amb`, `U` in prediction | Maps known load change to extra power before feedback alone catches up |
+| PID | Position form + anti-windup | Standard teaching baseline; same limits as MPC |
+| Optimised PID | SciPy L-BFGS-B per scenario | Fair strong baseline—not handicapped when MPC improved |
+
+---
+
+## Maths walkthrough (step by step)
+
+### 1. Continuous heater (plant truth)
+
+\[
+m c_p \frac{dT}{dt} = \eta P_{\mathrm{coil}} - U\,(T - T_{\mathrm{amb}})
+\]
+
+Discretised with explicit Euler at `dt = 1 s` in `twin/ibh.py`.
+
+### 2. MPC prediction model
+
+\[
+y_{k+1} = a\,y_k + b\,(u_k + u_{\mathrm{ff},k}) + \hat d_k
+\]
+
+- \((a,b)\) from least squares on a nominal power step.
+- \(\hat d_k\) is an **integrating bias** updated from measurement innovation (offset-free MPC).
+- \(u_{\mathrm{ff},k}\) compensates measured changes in \(T_{\mathrm{amb}}\) and \(U\) at the current temperature.
+
+### 3. Cost and constraints (each sample)
+
+Minimise over future power moves \(u_0,\ldots,u_{N_u-1}\) (held to horizon):
+
+\[
+J = \sum_{i=0}^{N-1} Q\,(y_i - r_i)^2 + Q_t\,(y_N - r_N)^2
+\]
+
+Subject to power window and slew: \(|u_k - u_{k-1}| \le \Delta u_{\max}\).
+
+Only **the first** optimised power is applied; then the window shifts (**receding horizon**).
+
+### 4. Observer update
+
+\[
+\hat d_k \leftarrow \hat d_{k-1} + L\,(y_k^{\mathrm{meas}} - \hat y_k), \quad L \approx 2
+\]
+
+Tuned as a scalar Kalman gain for the bias state (`kalman_disturbance_observer_gain`).
+
+### 5. PID (comparison)
+
+\[
+u_k = K_p e_k + K_i \sum e + K_d \frac{e_k - e_{k-1}}{\Delta t}, \quad e = r - y^{\mathrm{meas}}
+\]
+
+Optimised gains minimise IAE + violation penalty on the **same** plant (`pid_tune.py`).
+
+---
+
+## Why MPC wins here (mechanically)
+
+1. **Preview:** It sees the 80→120 °C step (or 165 °C target) before the error grows; PID waits for drift.
+2. **Constraints in the optimiser:** Under 150 kW / 8 kW/s, MPC never plans illegal moves; hand-tuned PID logs six slew violations.
+3. **Bias + feedforward:** Heat-loss and ambient steps enter the prediction through \(u_{\mathrm{ff}}\) and a fast \(\hat d\); PID must infer load only from temperature error (unless retuned offline).
+4. **One policy everywhere:** Batch MPC uses the same knobs on all scenarios; optimised PID gets fresh gains per scenario. After adding **optimised PID + the same feedforward**, MPC still has the lowest IAE on every primary scenario (see README table).
+
+---
+
+## Limitations (honest)
+
+- **Tuning exposure:** Horizon \(N\), terminal weight, and Kalman observer gain were chosen while inspecting these batch scenarios. Held-out checks (20 noise seeds, unseen step timings, ±20% plant scales) still show MPC with the **lowest IAE on every run** in those sweeps—see `results/held_out_validation.json`—but this is not a guarantee on real plant data.
+- **Feedforward symmetry:** MPC and **Opt. PID+FF** both use measured `T_amb` and `U`. Plain PID and optimised PID without FF do not. On the **ambient step**, retuned Opt. PID+FF (**585** IAE) is slightly **worse** than optimised PID alone (**578**) because the static offset fights the retuned feedback gains.
+- **Model class:** Prediction stays a single ARX plus bias; no MIMO, no state constraints on metal temperature, no move blocking beyond one held move.
+- **Compute:** Each sample solves a small NLP; PID is cheaper online.
+- **Energy:** Hand-tuned PID sometimes uses less energy by violating slew limits (six steps on the power-limit case).
+
+---
+
+## Two-minute pitch
+
+> We built a software induction heater and three controllers on top. PID chases temperature error. Optimised PID picks gains by search but still has no lookahead. MPC every second rolls a simple model forward, respects power limits, updates a disturbance estimate, and applies one planned move. On our coursework scenarios MPC now has the lowest integrated error on setpoint changes, disturbances, ambient shifts, tight power limits, and model mismatch—while keeping the coil inside legal power and slew. That is the industrial point: plan with constraints, reject loads without retuning every time the door opens.
+
+---
+
+## Demo script (Streamlit or batch)
+
+Run `streamlit run app.py` or `python3 examples/run_simulations.py`. Walk scenarios in this order:
+
+1. **Setpoint tracking** — Watch MPC begin raising power before 30 s because preview sees the upcoming 120 °C target; compare settling vs PID.
+2. **Disturbance rejection** — At 70 s, heat loss jumps; MPC feedforward + \(\hat d\) recover before optimised PID’s retuned gains finish integrating error.
+3. **Ambient step** — Same timing, ambient rises 8 °C; MPC trims power via negative feedforward while holding 115 °C.
+4. **Power limits** — Target 165 °C with 150 kW cap; MPC saturates smoothly at zero violations; note PID violation count on the scorecard.
+5. **Model mismatch** — Plant parameters drift; MPC bias absorbs much of the gap; frozen optimised-PID gains degrade (robustness figure in the PDF).
+
+On **Step-through**, pause one MPC tick: read predicted temperature curve, planned power, and active constraints caption.
+
+---
+
+## Words introduced here

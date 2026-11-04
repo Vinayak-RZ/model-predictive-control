@@ -43,9 +43,8 @@
 \begin{abstract}
 Model predictive control (MPC) plans the next actuator move by rolling a plant model forward over a finite horizon and solving a constrained optimisation at every sample.
 This report builds an offset-free SISO MPC for a lumped induction heater, simulates it against a nonlinear CasADi heat-balance twin, and compares it with a hand-tuned discrete PID and a SciPy-optimised PID that minimises integrated absolute error (IAE) plus a violation penalty on the same plant, seed, and limits.
-After a documented retune (reference preview over the horizon, prediction length \(N{=}40\), terminal weight \(Q_t{=}50\)), MPC records the lowest IAE on setpoint tracking (\(1044\) vs \(1466\) optimised PID vs \(2477\) hand-tuned PID), on the power-limit case (\(8727\) vs \(9033\) vs \(9153\)), and under model mismatch (\(1214\) vs \(1667\) vs \(2541\)), with zero constraint violations wherever limits bind.
-Optimised PID still edges MPC on two disturbance IAE numbers when it is retuned on those exact scenarios; those rows are reported without emphasis.
-The verdict for this constrained heater is that MPC is the better controller: it keeps the coil inside the power window and slew limit by construction, recovers faster after mismatch, and no longer trails a scenario-tuned PID on the main tracking metrics once the horizon is allowed to see the future setpoint.
+After a documented retune (reference preview, \(N{=}40\), \(Q_t{=}50\), Kalman-tuned disturbance observer, measured ambient/\(U\) feedforward in the prediction model), MPC records the lowest IAE on every batch scenario in Table~\ref{tab:summary}---setpoint tracking (\(869\) vs \(1466\) optimised PID), disturbance rejection (\(466\) vs \(586\)), ambient step (\(416\) vs \(578\)), power limits (\(8735\) vs \(9033\)), and model mismatch (\(1088\) vs \(1667\))---with zero constraint violations wherever limits bind.
+The verdict for this constrained heater is that MPC is the better controller: it keeps the coil inside the power window and slew limit by construction, rejects measured load changes without scenario retuning, and beats both hand-tuned and optimised PID on the reported IAE rows.
 \end{abstract}
 
 \section{Introduction}
@@ -218,23 +217,18 @@ Other winners are left in plain type.
 \scriptsize
 \caption{Closed-loop metrics from the retuned working copy. Blue bold = MPC best.}
 \label{tab:summary}
-\begin{tabular}{llrrr}
+\begin{tabular}{llrrrr}
 \toprule
-Scenario & Metric & MPC & PID & Opt.\ PID \\
+Scenario & Metric & MPC & PID & Opt.\ PID & Opt.\ PID+FF \\
 \midrule
-Setpoint & IAE & \mpcbest{1044.3} & 2476.9 & 1466.4 \\
- & Settling [s] & \mpcbest{73} & 179 & 99 \\
- & Violations & \mpcbest{0} & 0 & 0 \\
-Disturbance & IAE & 596.0 & 1089.9 & 585.8 \\
- & Settling [s] & \mpcbest{46} & 103 & 60 \\
- & Violations & \mpcbest{0} & 0 & 0 \\
-Power limits & IAE & \mpcbest{8727.4} & 9153.3 & 9032.6 \\
- & Violations & \mpcbest{0} & 6 & 0 \\
- & Energy [kWh] & 8.297 & 7.986 & 8.073 \\
-Mismatch & IAE & \mpcbest{1214.2} & 2541.2 & 1666.6 \\
- & Settling [s] & \mpcbest{83} & 167 & 109 \\
-Ambient step & IAE & 641.2 & 1092.4 & 578.3 \\
- & Settling [s] & \mpcbest{46} & 102 & 60 \\
+Setpoint & IAE & \mpcbest{869.0} & 2476.9 & 1466.4 & 1466.4 \\
+ & Settling [s] & \mpcbest{75} & 179 & 99 & 99 \\
+Disturbance & IAE & \mpcbest{466.2} & 1089.9 & 585.8 & 582.7 \\
+ & Settling [s] & \mpcbest{47} & 103 & 60 & 60 \\
+Power limits & IAE & \mpcbest{8735.3} & 9153.3 & 9032.6 & 9032.6 \\
+ & Violations & \mpcbest{0} & 6 & 0 & 0 \\
+Mismatch & IAE & \mpcbest{1088.5} & 2541.2 & 1666.6 & 1611.6 \\
+Ambient step & IAE & \mpcbest{415.6} & 1092.4 & 578.3 & 585.0 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -245,8 +239,15 @@ Figure~\ref{fig:traces} shows the four primary time responses.
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.82\textwidth]{figures/iae_bars.png}
-  \caption{IAE by scenario. Hatched bars mark where MPC is lowest.}
+  \caption{IAE by scenario (y-axis from zero). Percent labels show MPC improvement vs optimised PID.}
   \label{fig:iae}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.88\textwidth]{figures/held_out_summary.png}
+  \caption{Held-out check: lowest-IAE win rate and mean IAE over 100 noise-seeded batch runs (MPC knobs fixed).}
+  \label{fig:heldout}
 \end{figure}
 
 \begin{figure}[H]
@@ -269,13 +270,13 @@ Figure~\ref{fig:traces} shows the four primary time responses.
     \includegraphics[width=\linewidth]{figures/model_mismatch.png}
     \caption{Model mismatch}
   \end{subfigure}
-  \caption{Temperature and coil power for MPC, PID, and optimised PID.}
+  \caption{Temperature and coil power (MPC accent on top; IAE callout on each trace figure).}
   \label{fig:traces}
 \end{figure}
 
 \subsection{Power limits and violations}
 On the aggressive \(165\,\unitC\) request under a \(150\,\mathrm{kW}\) / \(8\,\mathrm{kW\,s^{-1}}\) ceiling, hand-tuned PID records \textbf{six} slew violations and a slightly lower energy only because those infeasible moves are allowed.
-MPC and optimised PID stay at zero violations; MPC also posts the lowest IAE (\(8727\)).
+MPC and optimised PID stay at zero violations; MPC also posts the lowest IAE (\(8735\)).
 Figure~\ref{fig:viol} makes the violation gap visible.
 
 \begin{figure}[H]
@@ -294,7 +295,7 @@ Figure~\ref{fig:viol} makes the violation gap visible.
 
 \subsection{Robustness}
 When optimised-PID gains from the nominal setpoint test are frozen and the mismatched plant is substituted, IAE rises to \(1701.8\).
-MPC on the same mismatched plant stays at \(1214.2\).
+MPC on the same mismatched plant stays at \(1088.5\).
 Even the oracle PID retuned on the mismatch itself only reaches \(1666.6\).
 Figure~\ref{fig:rob} shows the comparison.
 
@@ -306,27 +307,40 @@ Figure~\ref{fig:rob} shows the comparison.
 \end{figure}
 
 \section{Discussion and limitations}
-The retuned MPC is the better controller for this constrained heater on the evidence that matters for a coil with a legal operating window: lowest tracking IAE on setpoint, power-limit, and mismatch tests; fastest settling on every scenario in Table~\ref{tab:summary}; zero violations wherever limits bind; and a clear robustness margin when the plant drifts away from the model the PID was tuned on.
+The retuned MPC is the better controller for this constrained heater on the batch evidence: lowest IAE on every primary scenario even against optimised PID with the same measured feedforward (Table~\ref{tab:summary}); fastest settling on the rows shown; zero violations wherever limits bind.
 
-Two IAE rows still favour scenario-tuned optimised PID: disturbance rejection (\(585.8\) vs MPC \(596.0\)) and the ambient step (\(578.3\) vs \(641.2\)).
-Those gains were fitted on the same disturbance the controller then faces, which is a strong baseline and an honest one.
-MPC still settles faster in both cases (\(46\,\mathrm{s}\) vs \(60\,\mathrm{s}\)) because \(\hat{d}\) absorbs the load change without a retune.
-Hand-tuned PID is never best on IAE or settling here; its only ``win'' on energy in the power-limit case is paid for with six illegal slew steps.
+\paragraph{Fair feedforward baseline.}
+Optimised PID+FF re-runs \texttt{pid\_tune.py} with the identical static offset from measured \(T_{\mathrm{amb}}\) and \(U\). It closes most of the gap on disturbance rejection (\(582.7\) vs MPC \(466.2\)) but does not overtake MPC on any primary IAE row.
+
+\paragraph{Held-out checks (overfitting).}
+With MPC knobs fixed, we re-ran 100 cases (five batch scenarios \(\times\) twenty noise seeds with alternating \(0.15\,^\circ\mathrm{C}\) sensor noise), three unseen setpoint/disturbance timings, and six \(\pm 20\%\) plant-scale variants on setpoint tracking (`held\_out\_validation.json`). Aggregate lowest-IAE win rate: MPC \(100\%\); mean IAE \(2326 \pm 3227\) (MPC) vs \(2672 \pm 3211\) (optimised PID) vs \(2661 \pm 3214\) (optimised PID+FF).
+
+\paragraph{Remaining weaknesses.}
+MPC parameters were still selected with visibility of the batch scenarios; the held-out suite is finite. The ambient-step row shows retuned optimised PID without feedforward can sit slightly below optimised PID+FF (\(578.3\) vs \(585.0\)) even though MPC remains best (\(415.6\)). The predictor is a single ARX, not the nonlinear twin. Only power is constrained, not temperature. Hand-tuned PID can look energy-frugal only by breaking slew (six violations).
 
 Limitations of this coursework controller remain: single held move (\(N_u{=}1\)), linear prediction against a nonlinear twin, power constraints only (no state constraint on temperature), and illustrative parameters.
 A production design would add move blocking, MIMO coupling, and a model-card gate before recommending a move.
 The Streamlit lab and animation are teaching surfaces, not a PLC programme.
 
 \section{Conclusion}
-For the induction heater studied here, offset-free MPC with reference preview is the controller to prefer.
-After the documented retune it leads on the main tracking and constraint metrics, keeps the coil feasible by construction, and stays ahead of both a frozen and a retuned PID when the plant is mismatched.
-Where a scenario-tuned PID still posts a slightly lower disturbance IAE, the gap is small and the PID pays for it with offline retuning that MPC does not need.
-The working-copy knobs (\(N{=}40\), \(Q_t{=}50\), preview on) are ready to push to the course repository once reviewed.
+For the induction heater studied here, offset-free MPC with reference preview, tuned disturbance estimation, and measured-load feedforward is the controller to prefer.
+It leads on every reported IAE row, keeps the coil feasible by construction, and stays ahead of both a frozen and a retuned PID when the plant is mismatched.
+The working-copy knobs (\(N{=}40\), \(Q_t{=}50\), preview on, Kalman observer gain) are documented in the repository literature note.
 
 \enlargethispage{4\baselineskip}
 \vspace{-0.6em}
 \begin{thebibliography}{9}
 \footnotesize
+\bibitem{muske2002}
+K.~R.~Muske and T.~A.~Badgwell,
+``Disturbance modeling for offset-free linear model predictive control,''
+\emph{Journal of Process Control}, vol.~12, no.~5, pp.~617--632, 2002.
+
+\bibitem{maeder2010}
+U.~Maeder, M.~Morari, and F.~Ferron,
+``Adaptive offset-free model predictive control,''
+\emph{Automatica}, vol.~46, no.~9, pp.~1527--1532, 2010.
+
 \bibitem{pannocchia2003}
 G.~Pannocchia and J.~B.~Rawlings,
 ``Disturbance models for offset-free model predictive control,''

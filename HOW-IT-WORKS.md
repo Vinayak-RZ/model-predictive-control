@@ -116,7 +116,8 @@ Core unit tests may still call `solve(...)` with a shorter horizon (for example 
 | `y_ref` or `y_ref_traj` | `solve(...)` | Scalar reference or length-`N` preview trajectory |
 | `terminal_weight` | `solve(...)` / `DemoConfig` | Extra weight on the last step error; lab default 50 |
 | `move_weight` | `solve(...)` / `DemoConfig` | Penalty on input moves when `control_horizon > 1` |
-| `observer_gain` | `solve(...)` / simulator | Scales the `d_hat` innovation update; lab default 1.0 |
+| `observer_gain` | `solve(...)` / `DemoConfig` | Kalman-tuned innovation on `d_hat`; lab default ≈ 2.0 |
+| Measured `T_amb`, `U` | `solve(...)` / simulator | Steady-state feedforward inside prediction roll-out |
 | `solver_time_limit_s` | `solve(...)` | Soft deadline via `MpcTimedOut` |
 | `low`, `high`, `max_step` | `SetpointLimits` | Passed in by caller |
 | Model card | `model_card.py` | Optional gate: held-out residual under `max_held_out_rms`, `b != 0` |

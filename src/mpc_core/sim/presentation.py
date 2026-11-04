@@ -17,8 +17,8 @@ from mpc_core.sim.metrics import SimulationMetrics
 from mpc_core.sim.playground import TripleRun
 from mpc_core.sim.simulate import SimulationResult
 
-# Presentation deck: report numbers / draw traces that put MPC first.
-PRESENTATION_DEMO = True
+# Scorecard / playground use live simulation metrics (no synthetic reshaping).
+PRESENTATION_DEMO = False
 
 # Scorecard table / charts (UI only).
 SCORECARD_ROWS: list[dict] = [
