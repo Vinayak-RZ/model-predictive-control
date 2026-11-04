@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from mpc_core import IdentifiedLinearModel, SetpointLimits
+from mpc_core.measured_disturbance import kalman_disturbance_observer_gain
 from mpc_core.twin.ibh import IBHParams
 
 
@@ -29,10 +30,10 @@ class DemoConfig:
 def default_demo_config() -> DemoConfig:
     """Heater fixture scaled for a slow thermal response; ARX fitted offline.
 
-    Retuned MPC defaults (coursework, box experiments 31 Oct 2026):
+    Retuned MPC defaults (coursework, Nov 2026):
     prediction horizon 40, control horizon 1 (held move), terminal weight 50,
-    reference preview enabled in the simulator, observer gain 1.0.
-    Same plant and ARX as before. Multi-move trials raised IAE on this heater.
+    reference preview enabled, Kalman-tuned disturbance observer (~2.0 on the
+    illustrative ARX), measured ambient/U feedforward inside the prediction model.
     """
     ibh = IBHParams(
         m_kg=800.0,
@@ -51,6 +52,7 @@ def default_demo_config() -> DemoConfig:
         residual_rms=0.35,
         experiment="ibh_step_fit",
     )
+    observer_gain = kalman_disturbance_observer_gain(model.a)
     limits = SetpointLimits("power_setpoint", "kW", 0.0, 250.0, 25.0)
     return DemoConfig(
         ibh=ibh,
@@ -62,6 +64,6 @@ def default_demo_config() -> DemoConfig:
         control_horizon=1,
         move_weight=0.0,
         terminal_weight=50.0,
-        observer_gain=1.0,
+        observer_gain=observer_gain,
         tracking_weight=1.0,
     )

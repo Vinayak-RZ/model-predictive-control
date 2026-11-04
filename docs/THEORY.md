@@ -1,6 +1,6 @@
 # Industrial control theory for this lab
 
-> **Start here if you want equations.** Plain story with almost no maths → [EXPLAINER.md](EXPLAINER.md)  
+> **Start here if you want equations.** Plain story with almost no maths → [explainer.md](explainer.md)  
 > Knob list → [HOW-IT-WORKS.md](../HOW-IT-WORKS.md) · Scenario tables → [report/report.md](../report/report.md)
 
 British spelling. Symbols match what the code implements. Numeric examples are **illustrative coursework values**, not plant data.
@@ -23,7 +23,7 @@ Industrial control design is not “pick a controller name.” You need:
 
 Without those, you cannot explain *what* was optimised, *why* MPC and PID differ on the same heater, or defend the plots in the report. The sections below climb from the heat balance into the discrete controllers this repository actually runs.
 
-If you only need the kitchen-table story, stop at [EXPLAINER.md](EXPLAINER.md).
+If you only need the kitchen-table story, stop at [explainer.md](explainer.md).
 
 ### Symbol ↔ code map
 
@@ -347,4 +347,4 @@ Numbers and figures live in [report/report.md](../report/report.md) — this doc
 1. Pannocchia, G. and Rawlings, J. B. (2003). Disturbance models for offset-free model-predictive control. *AIChE Journal*. (Cited for the offset-free idea; implementation is the innovation update in `mpc.py`.)
 2. Implementation notes: [HOW-IT-WORKS.md](../HOW-IT-WORKS.md)
 3. Experimental narrative: [report/report.md](../report/report.md)
-4. Plain explainer: [EXPLAINER.md](EXPLAINER.md)
+4. Plain explainer: [explainer.md](explainer.md)

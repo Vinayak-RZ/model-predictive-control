@@ -12,7 +12,7 @@
   <a href="#quick-start"><b>Quick start</b></a> ·
   <a href="#interactive-app"><b>Interactive app</b></a> ·
   <a href="#showcase-video"><b>Video</b></a> ·
-  <a href="docs/EXPLAINER.md"><b>Explainer</b></a> ·
+  <a href="docs/explainer.md"><b>Explainer</b></a> ·
   <a href="docs/THEORY.md"><b>Theory</b></a> ·
   <a href="HOW-IT-WORKS.md"><b>How it works</b></a> ·
   <a href="report/report.md"><b>Report</b></a>
@@ -123,23 +123,31 @@ The cut focuses on power limits: plain PID breaks the slew; MPC stays inside the
 </p>
 
 <p align="center">
-  <img src="docs/demo-preview.gif" width="720" alt="10 s preview of the power-limit animation">
+  <img src="docs/demo-preview.gif" width="720" alt="Preview of power-limit batch figure (MPC vs PID traces)">
 </p>
 
 **Repo copy:** [`video/out/mpc-vs-pid.mp4`](video/out/mpc-vs-pid.mp4) · **Duration:** 82 s · **Size:** ~1.8 MB · **Source:** [`video/index.html`](video/index.html) + [`video/data/`](video/data/) from `python3 scripts/export_video_data.py`.
 
 ## Proof (batch metrics)
 
-Figures below match the Streamlit scorecard used for the presentation deck (`presentation.py`).
+Figures below use the **same batch simulation traces** as the report (`scripts/rebuild_report_metrics.py`). MPC is drawn in cobalt on top; PID baselines in grey. Each trace plot labels MPC IAE and percent improvement vs optimised PID.
+
+| Scenario | MPC IAE | PID IAE | Opt. PID | Opt. PID+FF |
+| --- | ---: | ---: | ---: | ---: |
+| Setpoint tracking | **869** | 2477 | 1466 | 1466 |
+| Disturbance rejection | **466** | 1090 | 586 | 582 |
+| Ambient step | **416** | 1092 | 578 | 585 |
+| Power limits | **8735** | 9153 | 9033 | 9033 |
+| Model mismatch | **1088** | 2541 | 1667 | 1612 |
 
 | Scenario | Metric | MPC | PID | Optimised PID |
 | --- | --- | --- | --- | --- |
-| Setpoint tracking | Settling [s] | **73** | 179 | 99 |
-| Setpoint tracking | IAE | **1044** | 2477 | 1466 |
-| Disturbance rejection | Settling [s] | **46** | 103 | 60 |
+| Setpoint tracking | Settling [s] | **75** | 179 | 99 |
+| Disturbance rejection | Settling [s] | **47** | 103 | 60 |
 | Power limits | Limit hits | **0** | 6 | 0 |
-| Power limits | IAE | **8727** | 9153 | 9033 |
-| Model mismatch | Settling [s] | **83** | 167 | 109 |
+| Model mismatch | Settling [s] | **86** | 167 | 109 |
+
+Held-out validation: `python3 scripts/run_held_out_validation.py` → `results/held_out_validation.json` (20 noise seeds × 5 scenarios, unseen step timings, ±20% plant scales).
 
 Simulation plots:
 
@@ -160,6 +168,6 @@ Simulation plots:
          PID + optimised PID (same plant, same metrics)
 ```
 
-Plain story: [`docs/EXPLAINER.md`](docs/EXPLAINER.md) · Maths / EE: [`docs/THEORY.md`](docs/THEORY.md) · Engineering notes: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.pdf`](report/report.pdf) · source [`report/main.tex`](report/main.tex) · notes [`report/README.md`](report/README.md)
+Plain story: [`docs/explainer.md`](docs/explainer.md) · Maths / EE: [`docs/THEORY.md`](docs/THEORY.md) · MPC references: [`docs/mpc_literature.md`](docs/mpc_literature.md) · Engineering notes: [`HOW-IT-WORKS.md`](HOW-IT-WORKS.md) · Course write-up: [`report/report.pdf`](report/report.pdf) · source [`report/main.tex`](report/main.tex) · notes [`report/README.md`](report/README.md)
 
 Educational use. Licences: [`CREDITS.md`](CREDITS.md).

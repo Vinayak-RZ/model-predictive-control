@@ -9,6 +9,10 @@ import numpy as np
 import time
 
 from mpc_core import IdentifiedLinearModel, MpcState, SetpointLimits, solve
+from mpc_core.measured_disturbance import (
+    MeasuredPlantContext,
+    steady_state_loss_offset_kw,
+)
 from mpc_core.sim.config import DemoConfig, default_demo_config
 from mpc_core.sim.metrics import SimulationMetrics, compute_metrics
 from mpc_core.sim.pid import PIDGains, PIDState, pid_step
@@ -27,6 +31,10 @@ class RunOptions:
     noise_seed: int = 42
     model_mismatch: bool = False
     enforce_pid_rate_limit: bool | None = None
+    plant_mass_scale: float = 1.0
+    plant_eta_scale: float = 1.0
+    plant_u_scale: float = 1.0
+    plant_t_amb_delta_c: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -69,14 +77,20 @@ def _reference_trace(scenario: ScenarioConfig, n_steps: int, dt_s: float) -> np.
 
 def _plant_params(cfg: DemoConfig, options: RunOptions) -> IBHParams:
     p = cfg.ibh
-    if not options.model_mismatch:
-        return p
+    if options.model_mismatch:
+        return IBHParams(
+            m_kg=p.m_kg * 1.08,
+            c_p_j_per_kg_k=p.c_p_j_per_kg_k,
+            eta=p.eta * 0.94,
+            U_w_per_k=p.U_w_per_k * 1.18,
+            T_amb_c=p.T_amb_c,
+        )
     return IBHParams(
-        m_kg=p.m_kg * 1.08,
+        m_kg=p.m_kg * options.plant_mass_scale,
         c_p_j_per_kg_k=p.c_p_j_per_kg_k,
-        eta=p.eta * 0.94,
-        U_w_per_k=p.U_w_per_k * 1.18,
-        T_amb_c=p.T_amb_c,
+        eta=p.eta * options.plant_eta_scale,
+        U_w_per_k=p.U_w_per_k * options.plant_u_scale,
+        T_amb_c=p.T_amb_c + options.plant_t_amb_delta_c,
     )
 
 
@@ -101,6 +115,7 @@ def run_closed_loop(
     mpc_terminal_weight: float = 0.0,
     mpc_observer_gain: float = 1.0,
     mpc_preview: bool = True,
+    pid_measured_feedforward: bool = False,
     result_label: str | None = None,
 ) -> SimulationResult:
     cfg = cfg or default_demo_config()
@@ -191,6 +206,8 @@ def run_closed_loop(
                 terminal_weight=mpc_terminal_weight,
                 y_ref_traj=ref_traj,
                 observer_gain=mpc_observer_gain,
+                nominal_plant=cfg.ibh,
+                measured_plant=MeasuredPlantContext.from_ibh_params(plant.params),
             )
             solve_ms.append((time.perf_counter() - t0) * 1000.0)
             u = float(np.clip(result.best[limits.setpoint_id], limits.low, limits.high))
@@ -199,10 +216,11 @@ def run_closed_loop(
             d_hist.append(result.d_hat)
         else:
             du_lim = limits.max_step if enforce_rate else None
-            u, pid_state = pid_step(
+            u_prev = u
+            u_cmd, pid_state = pid_step(
                 y=y_meas,
                 y_ref=y_r,
-                u_prev=u,
+                u_prev=u_prev,
                 dt_s=dt_s,
                 gains=gains,
                 state=pid_state,
@@ -210,7 +228,18 @@ def run_closed_loop(
                 u_max=limits.high,
                 du_max=du_lim,
             )
-            u = float(np.clip(u, limits.low, limits.high))
+            u = u_cmd
+            if pid_measured_feedforward:
+                u_ff = steady_state_loss_offset_kw(
+                    y_c=y_meas,
+                    nominal=cfg.ibh,
+                    measured=MeasuredPlantContext.from_ibh_params(plant.params),
+                )
+                u = float(u_cmd + u_ff)
+                u = float(np.clip(u, limits.low, limits.high))
+                if du_lim is not None:
+                    du = max(-du_lim, min(du_lim, u - u_prev))
+                    u = float(u_prev + du)
             d_hist.append(None)
 
         y_hist.append(y_true)
@@ -319,6 +348,8 @@ def run_mpc_step_log(
             terminal_weight=getattr(cfg, "terminal_weight", 0.0),
             y_ref_traj=ref_traj,
             observer_gain=getattr(cfg, "observer_gain", 1.0),
+            nominal_plant=cfg.ibh,
+            measured_plant=MeasuredPlantContext.from_ibh_params(plant.params),
         )
         ms = (time.perf_counter() - t0) * 1000.0
         u_new = float(np.clip(result.best[limits.setpoint_id], limits.low, limits.high))

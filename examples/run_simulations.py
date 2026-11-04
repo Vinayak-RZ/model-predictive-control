@@ -23,7 +23,7 @@ def main() -> None:
     out_dir = root / "results"
     out_dir.mkdir(parents=True, exist_ok=True)
     cfg = default_demo_config()
-    summary: dict[str, dict[str, dict]] = {}
+    summary: dict[str, dict] = {}
 
     scenario_items = list(SCENARIOS.items()) + [
         (
@@ -41,6 +41,13 @@ def main() -> None:
             key, scenario, opt = item
         options = opt or RunOptions()
         tune = tune_pid_gains(scenario, cfg=cfg, options=options, maxiter=35)
+        tune_ff = tune_pid_gains(
+            scenario,
+            cfg=cfg,
+            options=options,
+            maxiter=35,
+            pid_measured_feedforward=True,
+        )
         mpc = run_closed_loop(scenario, "mpc", cfg=cfg, options=options)
         pid = run_closed_loop(scenario, "pid", cfg=cfg, options=options)
         opt_pid = run_closed_loop(
@@ -51,34 +58,50 @@ def main() -> None:
             pid_gains=tune.gains,
             result_label="optimized_pid",
         )
+        opt_pid_ff = run_closed_loop(
+            scenario,
+            "pid",
+            cfg=cfg,
+            options=options,
+            pid_gains=tune_ff.gains,
+            pid_measured_feedforward=True,
+            result_label="optimized_pid_feedforward",
+        )
         png = out_dir / f"{key}.png"
         save_triple_figure(
             title=scenario.title if key != "model_mismatch" else "Model mismatch (setpoint tracking)",
             mpc=mpc,
             pid=pid,
             optimized_pid=opt_pid,
+            optimized_pid_ff=opt_pid_ff,
             path=png,
+            scenario_key=key,
         )
         summary[key] = {
             "mpc": _metrics_dict(mpc.metrics),
             "pid": _metrics_dict(pid.metrics),
             "optimized_pid": _metrics_dict(opt_pid.metrics),
+            "optimized_pid_feedforward": _metrics_dict(opt_pid_ff.metrics),
             "optimized_pid_gains": {
                 "kp": tune.gains.kp,
                 "ki": tune.gains.ki,
                 "kd": tune.gains.kd,
             },
+            "optimized_pid_feedforward_gains": {
+                "kp": tune_ff.gains.kp,
+                "ki": tune_ff.gains.ki,
+                "kd": tune_ff.gains.kd,
+            },
         }
         md = out_dir / f"{key}_metrics.md"
         md.write_text(
             f"# {scenario.title}\n\n"
-            f"MPC vs PID vs optimized PID (Kp={tune.gains.kp:.3g}, "
-            f"Ki={tune.gains.ki:.3g}, Kd={tune.gains.kd:.3g})\n\n"
-            f"| Metric | MPC | PID | Opt. PID |\n"
-            f"| --- | --- | --- | --- |\n"
-            + _table_row("IAE", mpc, pid, opt_pid)
-            + _table_row("Violations", mpc, pid, opt_pid)
-            + _table_row("Settling [s]", mpc, pid, opt_pid)
+            f"MPC vs PID vs optimized PID vs optimized PID+FF\n\n"
+            f"| Metric | MPC | PID | Opt. PID | Opt. PID+FF |\n"
+            f"| --- | --- | --- | --- | --- |\n"
+            + _table_row("IAE", mpc, pid, opt_pid, opt_pid_ff)
+            + _table_row("Violations", mpc, pid, opt_pid, opt_pid_ff)
+            + _table_row("Settling [s]", mpc, pid, opt_pid, opt_pid_ff)
             + "\n",
             encoding="utf-8",
         )
@@ -91,15 +114,21 @@ def main() -> None:
     print(f"Done. Figures in {out_dir}")
 
 
-def _table_row(name, mpc, pid, opt_pid):
+def _table_row(name, mpc, pid, opt_pid, opt_pid_ff):
     def fmt(m, attr):
         v = getattr(m.metrics, attr)
         return "—" if v is None else f"{v:.3g}"
 
+    attr = (
+        "iae"
+        if name == "IAE"
+        else "constraint_violation_steps"
+        if "Viol" in name
+        else "settling_time_s"
+    )
     return (
-        f"| {name} | {fmt(mpc, 'iae' if name == 'IAE' else 'constraint_violation_steps' if 'Viol' in name else 'settling_time_s')} "
-        f"| {fmt(pid, 'iae' if name == 'IAE' else 'constraint_violation_steps' if 'Viol' in name else 'settling_time_s')} "
-        f"| {fmt(opt_pid, 'iae' if name == 'IAE' else 'constraint_violation_steps' if 'Viol' in name else 'settling_time_s')} |\n"
+        f"| {name} | {fmt(mpc, attr)} | {fmt(pid, attr)} "
+        f"| {fmt(opt_pid, attr)} | {fmt(opt_pid_ff, attr)} |\n"
     )
 
 

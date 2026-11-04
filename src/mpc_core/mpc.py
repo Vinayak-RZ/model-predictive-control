@@ -1,10 +1,11 @@
 """Offset-free MPC on an identified linear model.
 
 Integrating disturbance per Pannocchia and Rawlings (2003). The disturbance is
-refreshed each run from the one-step innovation, scaled by an optional observer
-gain. The quadratic programme tracks a CV reference (with optional preview)
-under window and rate limits, with a free control horizon, move penalty, and
-terminal cost. Nothing here writes to a plant.
+refreshed each run from the one-step innovation, scaled by a Kalman-tuned gain.
+Measured ambient temperature and heat-loss coefficient add steady-state power
+feedforward inside the prediction roll-out. The quadratic programme tracks a CV
+reference (with optional preview) under window and rate limits, with a free
+control horizon, move penalty, and terminal cost. Nothing here writes to a plant.
 """
 
 from __future__ import annotations
@@ -18,7 +19,9 @@ from numpy.typing import NDArray
 from scipy.optimize import minimize
 
 from mpc_core.identified import IdentifiedLinearModel
+from mpc_core.measured_disturbance import MeasuredPlantContext, steady_state_loss_offset_kw
 from mpc_core.thresholds import SetpointLimits
+from mpc_core.twin.ibh import IBHParams
 
 
 class MpcTimedOut(Exception):
@@ -73,11 +76,13 @@ def _simulate(
     y0: float,
     d_hat: float,
     u_seq: NDArray[np.float64],
+    *,
+    feedforward_kw: float = 0.0,
 ) -> NDArray[np.float64]:
     y = y0
     out = np.empty(len(u_seq), dtype=np.float64)
     for i, u in enumerate(u_seq):
-        y = model.a * y + model.b * float(u) + d_hat
+        y = model.a * y + model.b * (float(u) + feedforward_kw) + d_hat
         out[i] = y
     return out
 
@@ -112,6 +117,8 @@ def solve(
     terminal_weight: float = 0.0,
     y_ref_traj: Sequence[float] | None = None,
     observer_gain: float = 1.0,
+    nominal_plant: IBHParams | None = None,
+    measured_plant: MeasuredPlantContext | None = None,
 ) -> MpcResult:
     """SISO offset-free QP; returns the first-move proposal (receding horizon)."""
     if horizon_steps < 1:
@@ -126,6 +133,13 @@ def solve(
     st = refresh_disturbance(
         model, state, y_meas, u0, observer_gain=observer_gain
     )
+    u_ff = 0.0
+    if nominal_plant is not None and measured_plant is not None:
+        u_ff = steady_state_loss_offset_kw(
+            y_c=y_meas,
+            nominal=nominal_plant,
+            measured=measured_plant,
+        )
     nu = control_horizon if control_horizon is not None else 1
     if nu < 1:
         raise ValueError("control_horizon must be at least 1")
@@ -153,7 +167,7 @@ def solve(
         if time.monotonic() > deadline:
             raise MpcTimedOut()
         u_seq = _expand_control_sequence(x, horizon_steps)
-        ys = _simulate(model, y_meas, st.d_hat, u_seq)
+        ys = _simulate(model, y_meas, st.d_hat, u_seq, feedforward_kw=u_ff)
         track = tracking_weight * float(np.sum((ys - ref) ** 2))
         term = terminal_weight * float((ys[-1] - ref[-1]) ** 2)
         if move_weight == 0.0:
@@ -196,7 +210,7 @@ def solve(
     x_star[0] = u_star
     u_seq = _expand_control_sequence(x_star, horizon_steps)
     u_seq[0] = u_star
-    ys = _simulate(model, y_meas, st.d_hat, u_seq)
+    ys = _simulate(model, y_meas, st.d_hat, u_seq, feedforward_kw=u_ff)
     active: list[str] = []
     if np.isclose(u_star, lim.low) or np.isclose(u_star, lim.high):
         active.append(f"{sp}.window")
