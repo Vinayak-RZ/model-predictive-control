@@ -9,6 +9,7 @@ import numpy as np
 import time
 
 from mpc_core import IdentifiedLinearModel, MpcState, SetpointLimits, solve
+from mpc_core.measured_disturbance import MeasuredPlantContext
 from mpc_core.sim.config import DemoConfig, default_demo_config
 from mpc_core.sim.metrics import SimulationMetrics, compute_metrics
 from mpc_core.sim.pid import PIDGains, PIDState, pid_step
@@ -191,6 +192,8 @@ def run_closed_loop(
                 terminal_weight=mpc_terminal_weight,
                 y_ref_traj=ref_traj,
                 observer_gain=mpc_observer_gain,
+                nominal_plant=cfg.ibh,
+                measured_plant=MeasuredPlantContext.from_ibh_params(plant.params),
             )
             solve_ms.append((time.perf_counter() - t0) * 1000.0)
             u = float(np.clip(result.best[limits.setpoint_id], limits.low, limits.high))
@@ -319,6 +322,8 @@ def run_mpc_step_log(
             terminal_weight=getattr(cfg, "terminal_weight", 0.0),
             y_ref_traj=ref_traj,
             observer_gain=getattr(cfg, "observer_gain", 1.0),
+            nominal_plant=cfg.ibh,
+            measured_plant=MeasuredPlantContext.from_ibh_params(plant.params),
         )
         ms = (time.perf_counter() - t0) * 1000.0
         u_new = float(np.clip(result.best[limits.setpoint_id], limits.low, limits.high))
