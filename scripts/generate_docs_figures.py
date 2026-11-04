@@ -138,6 +138,7 @@ def _sync_docs_from_report_figures() -> None:
         "streamlit-playground-mismatch.png": "model_mismatch.png",
         "streamlit-playground.png": "power_constraints.png",
         "streamlit-playground-soft-limits.png": "setpoint_tracking.png",
+        "streamlit-step-through.png": "setpoint_tracking.png",
     }
     for doc_name, fig_name in mapping.items():
         src = REPORT_FIG / fig_name
