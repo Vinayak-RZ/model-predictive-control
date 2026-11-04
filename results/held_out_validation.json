@@ -1,0 +1,336 @@
+{
+  "note": "MPC parameters fixed from make_cfg(). Primary-scenario optimised gains tuned at noise_seed=42. Held-out checks test generalisation, not retuning MPC.",
+  "noise_seed_sweep": {
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "by_scenario": {
+      "setpoint_tracking": {
+        "mpc": {
+          "mean_iae": 897.8824043983248,
+          "std_iae": 29.952743897556434,
+          "n": 20
+        },
+        "pid": {
+          "mean_iae": 2479.0179462703677,
+          "std_iae": 7.6624932074067225,
+          "n": 20
+        },
+        "optimized_pid": {
+          "mean_iae": 1469.4098460033013,
+          "std_iae": 4.446677740774342,
+          "n": 20
+        },
+        "optimized_pid_feedforward": {
+          "mean_iae": 1469.4098460033013,
+          "std_iae": 4.446677740774342,
+          "n": 20
+        },
+        "win_rate": {
+          "mpc": 1.0,
+          "pid": 0.0,
+          "optimized_pid": 0.0,
+          "optimized_pid_feedforward": 0.0
+        },
+        "mpc_beats_all_fraction": 1.0
+      },
+      "disturbance_rejection": {
+        "mpc": {
+          "mean_iae": 426.40997163830525,
+          "std_iae": 40.85241752745416,
+          "n": 20
+        },
+        "pid": {
+          "mean_iae": 1085.8429104659642,
+          "std_iae": 10.646343828063491,
+          "n": 20
+        },
+        "optimized_pid": {
+          "mean_iae": 595.3897056790559,
+          "std_iae": 13.005280936606283,
+          "n": 20
+        },
+        "optimized_pid_feedforward": {
+          "mean_iae": 593.8488068356966,
+          "std_iae": 15.534490613869448,
+          "n": 20
+        },
+        "win_rate": {
+          "mpc": 1.0,
+          "pid": 0.0,
+          "optimized_pid": 0.0,
+          "optimized_pid_feedforward": 0.0
+        },
+        "mpc_beats_all_fraction": 1.0
+      },
+      "power_constraints": {
+        "mpc": {
+          "mean_iae": 8759.478002959499,
+          "std_iae": 29.150231553181513,
+          "n": 20
+        },
+        "pid": {
+          "mean_iae": 9153.696926623561,
+          "std_iae": 5.112022100220458,
+          "n": 20
+        },
+        "optimized_pid": {
+          "mean_iae": 9032.619776698575,
+          "std_iae": 0.21386543744300782,
+          "n": 20
+        },
+        "optimized_pid_feedforward": {
+          "mean_iae": 9032.619776698575,
+          "std_iae": 0.21386543744300782,
+          "n": 20
+        },
+        "win_rate": {
+          "mpc": 1.0,
+          "pid": 0.0,
+          "optimized_pid": 0.0,
+          "optimized_pid_feedforward": 0.0
+        },
+        "mpc_beats_all_fraction": 1.0
+      },
+      "model_mismatch": {
+        "mpc": {
+          "mean_iae": 1086.186913746125,
+          "std_iae": 8.848988079384307,
+          "n": 20
+        },
+        "pid": {
+          "mean_iae": 2542.822030487543,
+          "std_iae": 5.386543165483527,
+          "n": 20
+        },
+        "optimized_pid": {
+          "mean_iae": 1668.1465179607371,
+          "std_iae": 3.7567050171344647,
+          "n": 20
+        },
+        "optimized_pid_feedforward": {
+          "mean_iae": 1617.5603918630154,
+          "std_iae": 7.23355144744616,
+          "n": 20
+        },
+        "win_rate": {
+          "mpc": 1.0,
+          "pid": 0.0,
+          "optimized_pid": 0.0,
+          "optimized_pid_feedforward": 0.0
+        },
+        "mpc_beats_all_fraction": 1.0
+      },
+      "ambient_step": {
+        "mpc": {
+          "mean_iae": 460.00711449689345,
+          "std_iae": 46.99463161018928,
+          "n": 20
+        },
+        "pid": {
+          "mean_iae": 1086.8529147154495,
+          "std_iae": 11.501183591154927,
+          "n": 20
+        },
+        "optimized_pid": {
+          "mean_iae": 592.127292392172,
+          "std_iae": 17.514433916004243,
+          "n": 20
+        },
+        "optimized_pid_feedforward": {
+          "mean_iae": 591.2660236021437,
+          "std_iae": 10.191689119788984,
+          "n": 20
+        },
+        "win_rate": {
+          "mpc": 1.0,
+          "pid": 0.0,
+          "optimized_pid": 0.0,
+          "optimized_pid_feedforward": 0.0
+        },
+        "mpc_beats_all_fraction": 1.0
+      }
+    },
+    "aggregate": {
+      "mpc": {
+        "mean_iae": 2325.9928814478294,
+        "std_iae": 3226.8365287847437,
+        "n": 100
+      },
+      "pid": {
+        "mean_iae": 3269.646545712577,
+        "std_iae": 3010.294410166719,
+        "n": 100
+      },
+      "optimized_pid": {
+        "mean_iae": 2671.5386277467683,
+        "std_iae": 3210.9225587009296,
+        "n": 100
+      },
+      "optimized_pid_feedforward": {
+        "mean_iae": 2660.9409690005464,
+        "std_iae": 3214.452425986547,
+        "n": 100
+      },
+      "win_rate": {
+        "mpc": 1.0,
+        "pid": 0.0,
+        "optimized_pid": 0.0,
+        "optimized_pid_feedforward": 0.0
+      },
+      "mpc_beats_all_fraction": 1.0
+    }
+  },
+  "unseen_scenarios": {
+    "setpoint_early_small": {
+      "iae": {
+        "mpc": 761.8381117138008,
+        "pid": 2078.445944831092,
+        "optimized_pid": 1128.6081094746667,
+        "optimized_pid_feedforward": 1128.6081094746667
+      },
+      "optimized_pid_gains": {
+        "kp": 0.7873881423116418,
+        "ki": 0.018735887804347658,
+        "kd": 0.0012854298740747172
+      },
+      "optimized_pid_feedforward_gains": {
+        "kp": 0.7873881423116418,
+        "ki": 0.018735887804347658,
+        "kd": 0.0012854298740747172
+      }
+    },
+    "setpoint_late_large": {
+      "iae": {
+        "mpc": 821.5137379841118,
+        "pid": 2535.7789066810765,
+        "optimized_pid": 1661.4712416511647,
+        "optimized_pid_feedforward": 1661.4712416511647
+      },
+      "optimized_pid_gains": {
+        "kp": 3.1492064042463936,
+        "ki": 0.15774690053996726,
+        "kd": 0.0
+      },
+      "optimized_pid_feedforward_gains": {
+        "kp": 3.1492064042463936,
+        "ki": 0.15774690053996726,
+        "kd": 0.0
+      }
+    },
+    "disturbance_late": {
+      "iae": {
+        "mpc": 429.1649319438557,
+        "pid": 1093.1035390931795,
+        "optimized_pid": 587.2655846266534,
+        "optimized_pid_feedforward": 687.7421454122972
+      },
+      "optimized_pid_gains": {
+        "kp": 1.141316828650532,
+        "ki": 0.03342232121828878,
+        "kd": 0.1734121249955528
+      },
+      "optimized_pid_feedforward_gains": {
+        "kp": 5.278115913550813,
+        "ki": 0.34264872865751683,
+        "kd": 0.8146617863817492
+      }
+    }
+  },
+  "plant_scale_sweep": {
+    "scenario": "setpoint_tracking",
+    "frozen_gains_from_nominal_tune": true,
+    "runs": [
+      {
+        "label": "mass_0p8",
+        "mpc": 685.2465085303992,
+        "pid": 2330.1365074059718,
+        "optimized_pid": 1343.417684519505,
+        "optimized_pid_feedforward": 1343.417684519505
+      },
+      {
+        "label": "mass_1p2",
+        "mpc": 1108.6838632797446,
+        "pid": 2569.8740203528123,
+        "optimized_pid": 1773.1379356949462,
+        "optimized_pid_feedforward": 1773.1379356949462
+      },
+      {
+        "label": "eta_0p8",
+        "mpc": 1176.7401574470086,
+        "pid": 2613.417742632456,
+        "optimized_pid": 1850.3404994685593,
+        "optimized_pid_feedforward": 1850.3404994685593
+      },
+      {
+        "label": "eta_1p2",
+        "mpc": 708.3600444638562,
+        "pid": 2359.0752618659935,
+        "optimized_pid": 1346.692623508186,
+        "optimized_pid_feedforward": 1346.692623508186
+      },
+      {
+        "label": "U_0p8",
+        "mpc": 942.1775423933443,
+        "pid": 2472.353591967043,
+        "optimized_pid": 1462.4741753118944,
+        "optimized_pid_feedforward": 1532.5823551884482
+      },
+      {
+        "label": "U_1p2",
+        "mpc": 955.8463740109751,
+        "pid": 2480.7597614563538,
+        "optimized_pid": 1471.7374621167858,
+        "optimized_pid_feedforward": 1527.3528475828841
+      }
+    ],
+    "summary": {
+      "mpc": {
+        "mean_iae": 929.5090816875547,
+        "std_iae": 183.7806896610254,
+        "n": 6
+      },
+      "pid": {
+        "mean_iae": 2470.936147613438,
+        "std_iae": 102.08298630815119,
+        "n": 6
+      },
+      "optimized_pid": {
+        "mean_iae": 1541.300063436646,
+        "std_iae": 198.88722005972332,
+        "n": 6
+      },
+      "optimized_pid_feedforward": {
+        "mean_iae": 1562.2539909937548,
+        "std_iae": 193.18402386680768,
+        "n": 6
+      },
+      "win_rate": {
+        "mpc": 1.0,
+        "pid": 0.0,
+        "optimized_pid": 0.0,
+        "optimized_pid_feedforward": 0.0
+      },
+      "mpc_beats_all_fraction": 1.0
+    }
+  }
+}

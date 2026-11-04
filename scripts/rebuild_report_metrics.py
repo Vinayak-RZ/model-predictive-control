@@ -148,6 +148,13 @@ def main():
         print(f"=== {key} ===", flush=True)
         t0 = time.perf_counter()
         tune = tune_pid_gains(scenario, cfg=cfg, options=options, maxiter=35)
+        tune_ff = tune_pid_gains(
+            scenario,
+            cfg=cfg,
+            options=options,
+            maxiter=35,
+            pid_measured_feedforward=True,
+        )
         opt_gains[key] = tune.gains
         kw = {}
         if h_override:
@@ -169,6 +176,12 @@ def main():
             scenario, "pid", cfg=cfg, options=options,
             pid_gains=tune.gains, result_label="optimized_pid",
         )
+        opt_pid_ff = run_closed_loop(
+            scenario, "pid", cfg=cfg, options=options,
+            pid_gains=tune_ff.gains,
+            pid_measured_feedforward=True,
+            result_label="optimized_pid_feedforward",
+        )
         title = scenario.title if key != "model_mismatch" else "Model mismatch (setpoint tracking)"
         save_triple_figure(
             title=title, mpc=mpc, pid=pid, optimized_pid=opt_pid,
@@ -183,14 +196,22 @@ def main():
             "mpc": md(mpc.metrics),
             "pid": md(pid.metrics),
             "optimized_pid": md(opt_pid.metrics),
+            "optimized_pid_feedforward": md(opt_pid_ff.metrics),
             "optimized_pid_gains": {
                 "kp": tune.gains.kp, "ki": tune.gains.ki, "kd": tune.gains.kd,
+            },
+            "optimized_pid_feedforward_gains": {
+                "kp": tune_ff.gains.kp,
+                "ki": tune_ff.gains.ki,
+                "kd": tune_ff.gains.kd,
             },
             "runtime_s": time.perf_counter() - t0,
         }
         s = summary["scenarios"][key]
         print(
-            f"  IAE {s['mpc']['iae']:.1f}/{s['pid']['iae']:.1f}/{s['optimized_pid']['iae']:.1f} "
+            f"  IAE mpc/pid/opt/opt+ff "
+            f"{s['mpc']['iae']:.1f}/{s['pid']['iae']:.1f}/"
+            f"{s['optimized_pid']['iae']:.1f}/{s['optimized_pid_feedforward']['iae']:.1f} "
             f"viol {s['mpc']['constraint_violation_steps']}/"
             f"{s['pid']['constraint_violation_steps']}/"
             f"{s['optimized_pid']['constraint_violation_steps']} "
@@ -259,6 +280,14 @@ def main():
     (RESULTS / "metrics_summary.json").write_text(json.dumps(slim, indent=2) + "\n")
     print("Wrote", OUT / "metrics_summary.json")
     print("Wrote", RESULTS / "metrics_summary.json")
+
+    print("=== held-out validation ===", flush=True)
+    import runpy
+
+    runpy.run_path(
+        str(ROOT / "scripts" / "run_held_out_validation.py"),
+        run_name="__main__",
+    )
 
 
 if __name__ == "__main__":
